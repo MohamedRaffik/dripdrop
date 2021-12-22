@@ -1,6 +1,7 @@
 from starlette.routing import Mount, Route
-from server.utils.enums import RequestMethods
+
 from server.api.auth.endpoints import create_account, admin_create_account, check_session, login, logout, google_oauth2
+from server.utils.enums import RequestMethods
 
 routes = [
     Mount('/auth', routes=[
@@ -30,7 +31,7 @@ routes = [
             methods=[RequestMethods.POST.value]
         ),
         Route(
-            '/google/oauth2',
+            '/googleoauth2',
             endpoint=google_oauth2,
             methods=[RequestMethods.GET.value]
         )

@@ -1,14 +1,16 @@
 from starlette.routing import Mount, Route, WebSocketRoute
-from server.utils.enums import RequestMethods
+
 from server.api.music.endpoints import (
     delete_job,
+    download,
     download_job,
     get_artwork,
-    listen_jobs,
     get_grouping,
     get_tags,
-    download
+    listen_jobs
 )
+from server.utils.enums import RequestMethods
+
 
 routes = [
     Mount('/music', routes=[

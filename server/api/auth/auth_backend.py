@@ -1,12 +1,21 @@
 import base64
 import json
+
 from cryptography.fernet import Fernet
+
 from starlette.authentication import AuthCredentials, SimpleUser, UnauthenticatedUser
-from starlette.requests import HTTPConnection
 from starlette.middleware.authentication import AuthenticationBackend
+from starlette.requests import HTTPConnection
+
 from server.config import SECRET_KEY, API_KEY
 from server.db import users, database, sessions
 from server.utils.enums import AuthScopes
+
+
+class User(SimpleUser):
+    def __init__(self, id: str, email: str) -> None:
+        self.id = id
+        super().__init__(email)
 
 
 class SessionHandler:
@@ -35,8 +44,8 @@ class AuthBackend(AuthenticationBackend):
             session = await database.fetch_one(query)
 
             if session:
-                username = session.get('username')
-                query = users.select().where(users.c.username == username)
+                user_id = session.get('user_id')
+                query = users.select().where(users.c.id == user_id)
                 account = await database.fetch_one(query)
 
                 if account:
@@ -44,9 +53,9 @@ class AuthBackend(AuthenticationBackend):
 
                     if account.get('admin'):
                         scopes.append(AuthScopes.ADMIN)
-                    return AuthCredentials(scopes), SimpleUser(username)
+                    return AuthCredentials(scopes), User(user_id, account.get('email'))
 
         if api_key == API_KEY:
-            return AuthCredentials([AuthScopes.API_KEY]), SimpleUser('api')
+            return AuthCredentials([AuthScopes.API_KEY]), User(None, 'api')
 
         return AuthCredentials([]), UnauthenticatedUser()

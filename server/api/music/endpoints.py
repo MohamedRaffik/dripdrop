@@ -1,23 +1,26 @@
 import asyncio
-import uuid
-import traceback
 import os
+import traceback
+import uuid
+
 from asyncio.tasks import Task
-from typing import Union
 from sqlalchemy.sql.expression import desc
-from starlette.datastructures import UploadFile
-from starlette.responses import FileResponse, JSONResponse, Response
-from starlette.requests import Request
-from starlette.concurrency import run_in_threadpool
-from starlette.websockets import WebSocket, WebSocketDisconnect
-from starlette.authentication import requires
+from typing import Union
 from websockets.exceptions import ConnectionClosedOK
 from yt_dlp.utils import sanitize_filename
-from server.utils.mp3dl import extract_info
-from server.utils.imgdl import download_image
+
+from starlette.authentication import requires
+from starlette.concurrency import run_in_threadpool
+from starlette.datastructures import UploadFile
+from starlette.requests import Request
+from starlette.responses import FileResponse, JSONResponse, Response
+from starlette.websockets import WebSocket, WebSocketDisconnect
+
+from server.api.music.tasks import run_job, read_tags
 from server.db import database, music_jobs
 from server.redis import RedisChannels, subscribe, redis
-from server.api.music.tasks import run_job, read_tags
+from server.utils.mp3dl import extract_info
+from server.utils.imgdl import download_image
 from server.utils.wrappers import endpoint_handler
 from server.utils.helpers import convert_db_response
 from server.utils.enums import AuthScopes
@@ -58,8 +61,8 @@ async def listen_jobs(websocket: WebSocket):
     tasks: list[Task] = []
     try:
         await websocket.accept()
-        query = music_jobs.select().where(music_jobs.c.username ==
-                                          websocket.user.display_name).order_by(desc(music_jobs.c.created_at))
+        query = music_jobs.select().where(music_jobs.c.user_id ==
+                                          websocket.user.id).order_by(desc(music_jobs.c.created_at))
         jobs = await database.fetch_all(query)
         await websocket.send_json({
             'type': 'ALL',

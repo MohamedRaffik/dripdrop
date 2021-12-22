@@ -1,5 +1,6 @@
 import asyncio
 import os
+
 from starlette import middleware
 from starlette.applications import Starlette
 from starlette.routing import Route
@@ -7,7 +8,9 @@ from starlette.responses import FileResponse
 from starlette.requests import Request
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware import Middleware
-from server.api import music, auth
+
+from server.api import music
+from server.api import auth
 from server.api.auth.auth_backend import AuthBackend
 from server.db import database
 from server.utils.enums import RequestMethods

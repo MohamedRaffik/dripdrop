@@ -1,22 +1,25 @@
 import asyncio
+import base64
+import io
+import mutagen
 import os
+import re
 import subprocess
 import traceback
-import mutagen
 import uuid
-import io
-import base64
-import re
-from typing import Union
+
 from pydub import AudioSegment
+from typing import Union
+from yt_dlp.utils import sanitize_filename
+
 from starlette.datastructures import UploadFile
 from starlette.concurrency import run_in_threadpool
-from yt_dlp.utils import sanitize_filename
+
 from server.db import database, music_jobs
+from server.redis import redis
 from server.utils.imgdl import download_image
 from server.utils.mp3dl import yt_download
 from server.utils.wrappers import exception_handler
-from server.redis import redis
 from server.utils.enums import RedisChannels
 
 
