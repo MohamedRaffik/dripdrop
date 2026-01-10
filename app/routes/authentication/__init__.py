@@ -29,7 +29,7 @@ from app.models.authentication import (
     SendResetPassword,
     UserResponse,
 )
-from app.services.jwt import create_jwt
+from app.services import cookie_session, jwt
 from app.tasks.email import send_password_reset_email, send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -57,15 +57,16 @@ async def login(db_session: DatabaseSession, body: Annotated[LoginUser, Body()])
     if user := await db_session.scalar(query):
         if user.verified:
             if user.check_password(body.password):
-                token = await create_jwt(email=body.email)
+                jwt_token = await jwt.create(email=body.email)
+                session_token = await cookie_session.create(jwt_token=jwt_token)
                 response = JSONResponse(
                     content=AuthenticatedResponse(
-                        access_token=token,
+                        access_token=jwt_token,
                         token_type="Bearer",
                         user=UserResponse.model_validate(user),
                     ).model_dump()
                 )
-                response.set_cookie(key="token", value=token)
+                response.set_cookie(key="token", value=session_token)
                 return response
             raise HTTPException(
                 detail="Incorrect password.", status_code=status.HTTP_401_UNAUTHORIZED
