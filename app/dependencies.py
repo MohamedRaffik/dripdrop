@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import User, session_maker
-from app.services.jwt import decode_jwt
+from app.services import cookie_session, jwt
 from app.settings import settings
 
 
@@ -30,10 +30,9 @@ async def provide_redis():
 RedisClient = Annotated[Redis, Depends(provide_redis)]
 
 
-async def get_user_from_token(token: str | None, db_session: AsyncSession):
+async def get_user_from_jwt(token: str | None, db_session: AsyncSession):
     if token:
-        payload = await decode_jwt(token)
-        if payload and (email := payload.sub):
+        if (payload := await jwt.decode(token)) and (email := payload.sub):
             query = select(User).where(User.email == email)
             user = await db_session.scalar(query)
             return user
@@ -48,7 +47,7 @@ async def get_user_from_header(
         if len(token_parts) == 2:
             token_type, token = token_parts
             if token_type.strip() == "Bearer":
-                return await get_user_from_token(token=token, db_session=db_session)
+                return await get_user_from_jwt(token=token, db_session=db_session)
     return None
 
 
@@ -58,7 +57,10 @@ HeaderUser = Annotated[User | None, Depends(get_user_from_header)]
 async def get_user_from_cookie(
     db_session: DatabaseSession, token: Annotated[str | None, Cookie()] = None
 ):
-    return await get_user_from_token(db_session=db_session, token=token)
+    if token:
+        jwt_token = await cookie_session.get(token=token)
+        return await get_user_from_jwt(token=jwt_token, db_session=db_session)
+    return None
 
 
 CookieUser = Annotated[User | None, Depends(get_user_from_cookie)]

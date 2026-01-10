@@ -14,7 +14,7 @@ class JWTPayload(BaseModel):
     exp: float
 
 
-async def create_jwt(email: str):
+async def create(email: str):
     return await asyncio.to_thread(
         jwt.encode,
         payload=JWTPayload(
@@ -26,7 +26,7 @@ async def create_jwt(email: str):
     )
 
 
-async def decode_jwt(token: str):
+async def decode(token: str):
     try:
         payload = await asyncio.to_thread(
             jwt.decode,
