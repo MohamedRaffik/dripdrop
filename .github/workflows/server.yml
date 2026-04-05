@@ -46,7 +46,7 @@ jobs:
           echo "REDIS_URL=redis://redis:6379" >> .env
           echo "TEST_ASYNC_DATABASE_URL=postgresql+asyncpg://dripdrop:dripdrop@postgres/dripdrop" >> .env
           echo "TEST_REDIS_URL=redis://redis:6379" >> .env
-          echo .env
+          cat .env
       - name: Run tests
         run: docker compose --profile prod --env-file .env run --rm server test
   deploy:
