@@ -37,6 +37,8 @@ jobs:
           identity-id: e856a171-c913-4243-936d-942d86b7d4ea
           project-slug: dripdrop
           env-slug: dev
+          export-type: "file"
+          file-output-path: ".env"
       - name: Add default values to .env file
         run: |
           printf "\n" >> .env
