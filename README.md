@@ -49,3 +49,10 @@ Run this command to execute tests.
 ```bash
 make test
 ```
+
+## Run with infisical
+
+Run this command to execute a make command with infisical
+```bash
+CMD=<COMMAND> make infisical
+```
