@@ -1,5 +1,5 @@
 import React, { forwardRef, useMemo } from "react";
-import ReactPlayer from "react-player";
+import ReactPlayer from "react-player/youtube";
 import { OnProgressProps } from "react-player/base";
 
 import { YoutubeVideoResponse as YoutubeVideo } from "../../api/generated/youtubeApi";
