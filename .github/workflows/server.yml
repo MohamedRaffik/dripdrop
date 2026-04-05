@@ -27,15 +27,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-      - name: Retrieve infiscal secrets
-        uses: infisical/secrets-action@v1.0.12
+      - name: Infisical
+        uses: infisical/secrets-action@v1.0.15
         with:
-          method: "universal"
-          client-id: ${{ secrets.INFISCAL_CLIENT_ID }}
-          client-secret: ${{ secrets.INFISCAL_CLIENT_SECRET }}
-          project-slug: "dripdrop-1-hbh"
-          env-slug: "dev"
-          export-type: "file"
+          method: oidc
+          identity-id: e856a171-c913-4243-936d-942d86b7d4ea
+          project-slug: dripdrop
+          env-slug: dev
       - name: Add default values to .env file
         run: |
           printf "\n" >> .env
