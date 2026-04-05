@@ -4,7 +4,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import TIMESTAMP, ForeignKey
+from sqlalchemy import TIMESTAMP, ForeignKey, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base, get_session
@@ -108,13 +108,18 @@ class MusicJob(Base):
                 if response.is_success and imagedownloader.is_image_link(response):
                     self.artwork_url = artwork_url
 
+    @classmethod
     async def upload_files(
-        self, music_file: MusicFile | None = None, artwork_url: str | None = None
+        cls,
+        music_job_id: str,
+        music_file: MusicFile | None = None,
+        artwork_url: str | None = None,
     ):
         async with get_session() as db_session:
-            if music_file:
-                await self._upload_audio_file(music_file=music_file)
-            if artwork_url:
-                await self._upload_artwork_url(artwork_url=artwork_url)
-            db_session.add(self)
-            await db_session.commit()
+            query = select(MusicJob).where(MusicJob.id == music_job_id)
+            if music_job := await db_session.scalar(query):
+                if music_file:
+                    await music_job._upload_audio_file(music_file=music_file)
+                if artwork_url:
+                    await music_job._upload_artwork_url(artwork_url=artwork_url)
+                await db_session.commit()

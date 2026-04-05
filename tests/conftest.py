@@ -211,12 +211,12 @@ async def create_music_job(db_session: AsyncSession, faker: Faker):
         )
         db_session.add(music_job)
         await db_session.commit()
-        db_session.expunge(music_job)
-        await music_job.upload_files(
+        await MusicJob.upload_files(
+            music_job_id=music_job.id,
             music_file=file,
             artwork_url=artwork_url,
         )
-        db_session.add(music_job)
+        await db_session.refresh(music_job)
         return music_job
 
     return _run

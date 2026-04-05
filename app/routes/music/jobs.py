@@ -77,7 +77,9 @@ async def create_job(
         if form.file
         else None
     )
-    background_tasks.add_task(music_job.upload_files, music_file, form.artwork_url)
+    background_tasks.add_task(
+        MusicJob.upload_files, music_job.id, music_file, form.artwork_url
+    )
     background_tasks.add_task(run_music_job.delay, music_job_id=str(music_job.id))
     return None
 
