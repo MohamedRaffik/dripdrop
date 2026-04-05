@@ -1,7 +1,7 @@
 import {
   createContext,
-  MutableRefObject,
   ReactNode,
+  RefObject,
   useCallback,
   useContext,
   useEffect,
@@ -15,7 +15,7 @@ import { GetYoutubeVideosApiYoutubeVideosListGetApiArg as YoutubeVideosParams } 
 import { useFooter } from "./FooterProvider";
 import { YoutubeVideoResponse as YoutubeVideo } from "../api/generated/youtubeApi";
 import { useYoutubeVideosQuery } from "../api/youtube";
-import ReactPlayer from "react-player";
+import ReactPlayer from "react-player/youtube";
 
 interface BackgroundPlayerContextType {
   addVideoToQueue: ({ index, params }: { index: number; params: YoutubeVideosParams }) => void;
@@ -29,7 +29,7 @@ interface BackgroundPlayerContextType {
   setPlaying: (playing: boolean) => void;
   setShowPlayer: (show: boolean) => void;
   showPlayer: boolean;
-  playerRef: MutableRefObject<ReactPlayer | null>;
+  playerRef: RefObject<ReactPlayer | null>;
 }
 
 const BackgroundPlayerContext = createContext<BackgroundPlayerContextType | undefined>(undefined);

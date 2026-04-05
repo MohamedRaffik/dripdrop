@@ -1,9 +1,9 @@
-import { MutableRefObject, ReactNode, createContext, useContext, useRef, useState } from "react";
+import { RefObject, ReactNode, createContext, useContext, useRef, useState } from "react";
 
 interface FooterContextType {
   displayFooter: boolean;
   setDisplayFooter: (displayFooter: boolean) => void;
-  footerRef: MutableRefObject<HTMLDivElement | null>;
+  footerRef: RefObject<HTMLDivElement | null>;
 }
 
 const FooterContext = createContext<FooterContextType | undefined>(undefined);

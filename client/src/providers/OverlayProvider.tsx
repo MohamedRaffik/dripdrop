@@ -1,7 +1,7 @@
-import { createContext, ReactNode, useRef, MutableRefObject, useContext } from "react";
+import { createContext, ReactNode, useRef, RefObject, useContext } from "react";
 
 interface OverlayContextType {
-  overlayRef: MutableRefObject<HTMLDivElement | null>;
+  overlayRef: RefObject<HTMLDivElement | null>;
 }
 
 const OverlayContext = createContext<OverlayContextType | undefined>(undefined);
