@@ -2,7 +2,7 @@ import asyncio
 import uuid
 from urllib.parse import urlencode, urlunsplit
 
-from app.services.smtp2go import send_email
+from app.services.smtp import send_email
 from app.settings import ENV, settings
 from app.tasks.app import QueueTask, celery
 from app.templates import template_env
@@ -32,7 +32,7 @@ async def send_verification_email(self: QueueTask, email: str, base_url: str):
         )
         return await asyncio.to_thread(
             send_email,
-            sender="app@dripdrop.pro",
+            sender=settings.smtp_from_email,
             recipient=email,
             subject="Verification",
             html=html,
@@ -49,7 +49,7 @@ async def send_password_reset_email(self: QueueTask, email: str):
         )
         return await asyncio.to_thread(
             send_email,
-            sender="app@dripdrop.pro",
+            sender=settings.smtp_from_email,
             recipient=email,
             subject="Reset Password",
             html=html,
