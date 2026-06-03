@@ -4,6 +4,7 @@ from urllib.parse import parse_qs, urlparse
 from bs4 import BeautifulSoup
 
 from app.db import User
+from app.settings import settings
 from app.tasks.email import send_password_reset_email, send_verification_email
 
 
@@ -20,7 +21,7 @@ async def test_send_reset(create_user, monkeypatch):
     await send_password_reset_email(user.email)
     mock_send_email.assert_called_once()
     kwargs = mock_send_email.call_args.kwargs
-    assert kwargs["sender"] == "app@dripdrop.pro"
+    assert kwargs["sender"] == settings.smtp_from_email
     assert kwargs["recipient"] == user.email
     assert kwargs["subject"] == "Reset Password"
 
@@ -38,7 +39,7 @@ async def test_send_verification(create_user, redis, monkeypatch):
     await send_verification_email(user.email, "http://testserver")
     mock_send_email.assert_called_once()
     kwargs = mock_send_email.call_args.kwargs
-    assert kwargs["sender"] == "app@dripdrop.pro"
+    assert kwargs["sender"] == settings.smtp_from_email
     assert kwargs["recipient"] == user.email
     assert kwargs["subject"] == "Verification"
 

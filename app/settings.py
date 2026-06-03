@@ -27,8 +27,12 @@ class Settings(BaseSettings):
     invidious_api_url: str
     redis_url: str
     secret_key: str
-    sendgrid_api_key: str
-    smtp2go_api_key: str
+    smtp_from_email: str = "app@dripdrop.pro"
+    smtp_host: str = "smtp.protonmail.ch"
+    smtp_password: str
+    smtp_port: int = 587
+    smtp_use_ssl: bool = False
+    smtp_username: str
     test_async_database_url: str
     test_aws_s3_bucket: str
     test_redis_url: str
