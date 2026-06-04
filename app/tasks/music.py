@@ -7,7 +7,7 @@ import aiofiles.os
 from sqlalchemy import select
 from yt_dlp.utils import sanitize_filename
 
-from app.db import MusicJob, WebDav
+from app.db import MusicJob, WebDav, YtdlpCookies
 from app.models.music import MusicJobUpdateResponse
 from app.services import (
     audiotags,
@@ -25,7 +25,7 @@ from app.tasks.app import QueueTask, celery
 JOB_DIR = "music_jobs"
 
 
-async def retrieve_audio_file(music_job: MusicJob):
+async def retrieve_audio_file(music_job: MusicJob, cookies: str | None = None):
     jobs_root_directory = await tempfiles.create_new_directory(JOB_DIR)
     job_file_path = Path(jobs_root_directory).joinpath(str(music_job.id))
     await aiofiles.os.mkdir(job_file_path)
@@ -54,7 +54,9 @@ async def retrieve_audio_file(music_job: MusicJob):
         # else:
         filename = str(Path(job_file_path).joinpath("temp.mp3"))
         await ytdlp.download_audio_from_video(
-            url=music_job.video_url, download_path=filename.replace(".mp3", "")
+            url=music_job.video_url,
+            download_path=filename.replace(".mp3", ""),
+            cookies=cookies,
         )
     return filename
 
@@ -112,7 +114,15 @@ async def run_music_job(self: QueueTask, music_job_id: str):
             MusicJobUpdateResponse(id=music_job_id, status="STARTED").model_dump_json()
         )
 
-        if not (filename := await retrieve_audio_file(music_job=music_job)):
+        query = select(YtdlpCookies).where(YtdlpCookies.email == music_job.user_email)
+        ytdlp_cookies = await db_session.scalar(query)
+
+        if not (
+            filename := await retrieve_audio_file(
+                music_job=music_job,
+                cookies=ytdlp_cookies.cookies if ytdlp_cookies else None,
+            )
+        ):
             raise Exception("File not found")
 
         artwork_info = await get_artwork_info(music_job=music_job)
