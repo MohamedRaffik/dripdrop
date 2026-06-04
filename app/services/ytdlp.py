@@ -8,6 +8,7 @@ async def download_audio_from_video(download_path: str, url: str):
         ydl_opts = {
             "format": "best",
             "fixup": "never",
+            "writethumbnail": True,
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
@@ -17,6 +18,9 @@ async def download_audio_from_video(download_path: str, url: str):
                 {
                     "key": "FFmpegMetadata",
                     "add_metadata": True,
+                },
+                {
+                    "key": "EmbedThumbnail",
                 },
             ],
             "outtmpl": download_path,
