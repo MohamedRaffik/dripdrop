@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING
 
 import bcrypt
-from cryptography.fernet import Fernet
 from sqlalchemy import ForeignKey, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-from app.settings import settings
+from app.db.models.encrypted import EncryptedCredentialsMixin
 
 if TYPE_CHECKING:
     from app.db.models.music import MusicJob
@@ -17,8 +16,6 @@ if TYPE_CHECKING:
         YoutubeVideoQueue,
         YoutubeVideoWatch,
     )
-
-fernet = Fernet(bytes(settings.fernet_key, encoding="utf-8"))
 
 
 class User(Base):
@@ -74,7 +71,7 @@ def init_user(target: User, args, kwargs):
         kwargs["password"] = target.hash_password(kwargs["password"])
 
 
-class WebDav(Base):
+class WebDav(EncryptedCredentialsMixin, Base):
     __tablename__ = "webdav"
 
     email: Mapped[str] = mapped_column(
@@ -91,14 +88,6 @@ class WebDav(Base):
     url: Mapped[str] = mapped_column(nullable=False)
     user: Mapped[User] = relationship(User, back_populates="webdav")
 
-    @classmethod
-    def encrypt_value(cls, value: str):
-        return str(fernet.encrypt(bytes(value, encoding="utf-8")), encoding="utf-8")
-
-    @classmethod
-    def decrypt_value(cls, value: str):
-        return str(fernet.decrypt(value), encoding="utf-8")
-
 
 @event.listens_for(WebDav, "init")
 def init_webdav(target: WebDav, args, kwargs):
@@ -114,7 +103,7 @@ def load_webdav(target: WebDav, context):
     target.password = WebDav.decrypt_value(target.password)
 
 
-class YtdlpCookies(Base):
+class YtdlpCookies(EncryptedCredentialsMixin, Base):
     __tablename__ = "ytdlp_cookies"
 
     email: Mapped[str] = mapped_column(
@@ -128,9 +117,6 @@ class YtdlpCookies(Base):
     )
     cookies: Mapped[str] = mapped_column(nullable=False)
     user: Mapped[User] = relationship(User, back_populates="ytdlp_cookies")
-
-    encrypt_value = WebDav.encrypt_value
-    decrypt_value = WebDav.decrypt_value
 
 
 @event.listens_for(YtdlpCookies, "init")
