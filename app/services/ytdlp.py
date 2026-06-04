@@ -13,7 +13,11 @@ async def download_audio_from_video(download_path: str, url: str):
                     "key": "FFmpegExtractAudio",
                     "preferredcodec": "mp3",
                     "preferredquality": "0",
-                }
+                },
+                {
+                    "key": "FFmpegMetadata",
+                    "add_metadata": True,
+                },
             ],
             "outtmpl": download_path,
         }
