@@ -123,6 +123,36 @@ async def test_run_music_job_with_audio_url(
 
 
 @pytest.mark.long
+async def test_run_music_job_with_video_url_embedded_artwork(
+    create_user,
+    create_music_job,
+    db_session,
+    test_video_url,
+):
+    """
+    Test running a music job with a video url. The embedded yt-dlp thumbnail
+    should be uploaded and available on the job for display.
+    """
+
+    user: User = await create_user()
+    music_job: MusicJob = await create_music_job(
+        email=user.email, video_url=test_video_url
+    )
+
+    await run_music_job(music_job_id=str(music_job.id))
+
+    await db_session.refresh(music_job)
+
+    assert music_job.completed is not None
+    assert music_job.artwork_url is not None
+    assert music_job.artwork_filename is not None
+
+    async with AsyncClient() as client:
+        artwork_response = await client.get(music_job.artwork_url)
+        assert artwork_response.status_code == 200
+
+
+@pytest.mark.long
 async def test_run_music_job_with_file(
     create_user,
     create_music_job,

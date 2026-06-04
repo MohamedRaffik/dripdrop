@@ -8,6 +8,7 @@ async def download_audio_from_video(download_path: str, url: str):
         ydl_opts = {
             "format": "best",
             "fixup": "never",
+            "noplaylist": True,
             "writethumbnail": True,
             "postprocessors": [
                 {
@@ -33,7 +34,7 @@ async def download_audio_from_video(download_path: str, url: str):
 
 async def extract_video_info(url: str):
     def _extract_video_info():
-        with yt_dlp.YoutubeDL() as ydl:
+        with yt_dlp.YoutubeDL({"noplaylist": True}) as ydl:
             return ydl.extract_info(url, download=False)
 
     return await asyncio.to_thread(_extract_video_info)
