@@ -236,7 +236,7 @@ async def test_run_music_job_with_external_artwork(
     assert music_job.completed is not None
     assert music_job.download_url is not None
     assert music_job.download_filename is not None
-    assert music_job.artwork_url is not None
+    assert music_job.artwork_url == test_image_url
     assert music_job.artwork_filename is None
 
     async with AsyncClient() as client:

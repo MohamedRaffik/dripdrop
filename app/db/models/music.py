@@ -110,6 +110,9 @@ class MusicJob(Base):
                     self.artwork_url = artwork_url
 
     async def upload_embedded_artwork(self, file_path: str):
+        if self.artwork_url:
+            return
+
         def _get_artwork():
             audio_tags = audiotags.AudioTags(file_path=file_path)
             return audio_tags.artwork
