@@ -30,7 +30,7 @@ const Account = () => {
   const [deleteYtdlpCookies, deleteYtdlpCookiesStatus] = useDeleteYtdlpCookiesMutation();
 
   const [webdavInfo, setWebdavInfo] = useState({ username: "", password: "", url: "" });
-  const [ytdlpCookiesInfo, setYtdlpCookiesInfo] = useState({ cookies: "" });
+  const [cookies, setCookies] = useState("");
   const [webdavDeleteOpened, webdavDeleteHandlers] = useDisclosure(false);
   const [ytdlpCookiesDeleteOpened, ytdlpCookiesDeleteHandlers] = useDisclosure(false);
 
@@ -51,9 +51,9 @@ const Account = () => {
 
   useEffect(() => {
     if (ytdlpCookiesStatus.isSuccess && ytdlpCookiesStatus.currentData) {
-      setYtdlpCookiesInfo(ytdlpCookiesStatus.currentData);
+      setCookies(ytdlpCookiesStatus.currentData.cookies);
     } else {
-      setYtdlpCookiesInfo({ cookies: "" });
+      setCookies("");
     }
   }, [ytdlpCookiesStatus.currentData, ytdlpCookiesStatus.isSuccess]);
 
@@ -129,8 +129,8 @@ const Account = () => {
               <Textarea
                 label="Cookies"
                 description="Paste the contents of a Netscape-format cookies.txt file. These are used when downloading audio with yt-dlp."
-                value={ytdlpCookiesInfo.cookies}
-                onChange={(e) => setYtdlpCookiesInfo({ cookies: e.target.value })}
+                value={cookies}
+                onChange={(e) => setCookies(e.target.value)}
                 minRows={10}
                 autosize
                 withAsterisk
@@ -149,7 +149,7 @@ const Account = () => {
                   Delete
                 </Button>
                 <Button
-                  onClick={() => updateYtdlpCookies(ytdlpCookiesInfo)}
+                  onClick={() => updateYtdlpCookies({ cookies })}
                   loading={updateYtdlpCookiesStatus.isLoading}
                 >
                   Save
