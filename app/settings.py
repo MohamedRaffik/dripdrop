@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     invidious_api_url: str
     redis_url: str
     secret_key: str
-    smtp_from_email: str = "app@dripdrop.pro"
+    smtp_from_email: str = "dripdrop <app@dripdrop.pro>"
     smtp_host: str = "smtp.protonmail.ch"
     smtp_password: str
     smtp_port: int = 587
