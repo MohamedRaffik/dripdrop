@@ -1,9 +1,12 @@
 import React, { forwardRef, useMemo } from "react";
-import ReactPlayer from "react-player/youtube";
-import { OnProgressProps } from "react-player/base";
+import ReactPlayer from "react-player";
 
 import { YoutubeVideoResponse as YoutubeVideo } from "../../api/generated/youtubeApi";
 import { useAddYoutubeVideoWatchMutation } from "../../api/youtube";
+
+export interface ProgressState {
+  playedSeconds: number;
+}
 
 interface VideoPlayerProps {
   video: YoutubeVideo | null | undefined;
@@ -11,7 +14,7 @@ interface VideoPlayerProps {
   onDuration?: (duration: number) => void;
   onEnd?: () => void;
   onReady?: () => void;
-  onProgress?: (state: OnProgressProps) => void;
+  onProgress?: (state: ProgressState) => void;
   onPlay?: () => void;
   onPause?: () => void;
   width?: string;
@@ -19,7 +22,7 @@ interface VideoPlayerProps {
   style?: React.CSSProperties;
 }
 
-const VideoPlayer = forwardRef<ReactPlayer, VideoPlayerProps>(
+const VideoPlayer = forwardRef<HTMLVideoElement, VideoPlayerProps>(
   ({ video, onDuration, onProgress, onEnd, onReady, onPlay, onPause, playing, height, width, style }, ref) => {
     const [watchVideo] = useAddYoutubeVideoWatchMutation();
 
@@ -32,7 +35,7 @@ const VideoPlayer = forwardRef<ReactPlayer, VideoPlayerProps>(
           width={width || "100%"}
           playing={playing}
           controls={true}
-          url={`https://youtube.com/embed/${video?.id}`}
+          src={video?.id ? `https://www.youtube.com/watch?v=${video.id}` : undefined}
           onPlay={() => {
             if (onPlay) {
               onPlay();
@@ -48,17 +51,19 @@ const VideoPlayer = forwardRef<ReactPlayer, VideoPlayerProps>(
               onReady();
             }
           }}
-          onDuration={(duration) => {
-            if (onDuration) {
+          onDurationChange={(event) => {
+            const duration = event.currentTarget.duration;
+            if (onDuration && Number.isFinite(duration)) {
               onDuration(duration);
             }
           }}
-          onProgress={(state) => {
+          onTimeUpdate={(event) => {
+            const playedSeconds = event.currentTarget.currentTime;
             if (video) {
               if (onProgress) {
-                onProgress(state);
+                onProgress({ playedSeconds });
               }
-              if (state.playedSeconds > 20 && video && !video.watched) {
+              if (playedSeconds > 20 && !video.watched) {
                 watchVideo(video.id);
               }
             }

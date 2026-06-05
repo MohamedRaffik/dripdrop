@@ -15,7 +15,6 @@ import { GetYoutubeVideosApiYoutubeVideosListGetApiArg as YoutubeVideosParams } 
 import { useFooter } from "./FooterProvider";
 import { YoutubeVideoResponse as YoutubeVideo } from "../api/generated/youtubeApi";
 import { useYoutubeVideosQuery } from "../api/youtube";
-import ReactPlayer from "react-player/youtube";
 
 interface BackgroundPlayerContextType {
   addVideoToQueue: ({ index, params }: { index: number; params: YoutubeVideosParams }) => void;
@@ -29,7 +28,7 @@ interface BackgroundPlayerContextType {
   setPlaying: (playing: boolean) => void;
   setShowPlayer: (show: boolean) => void;
   showPlayer: boolean;
-  playerRef: RefObject<ReactPlayer | null>;
+  playerRef: RefObject<HTMLVideoElement | null>;
 }
 
 const BackgroundPlayerContext = createContext<BackgroundPlayerContextType | undefined>(undefined);
@@ -40,7 +39,7 @@ export const BackgroundPlayerProvider = ({ children }: { children: ReactNode }) 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [params, setParams] = useState<YoutubeVideosParams>();
   const [showPlayer, setShowPlayer] = useState(false);
-  const playerRef = useRef<ReactPlayer | null>(null);
+  const playerRef = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(false);
 
   const videosStatus = useYoutubeVideosQuery(params ?? skipToken);

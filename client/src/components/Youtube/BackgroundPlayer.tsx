@@ -189,8 +189,9 @@ const BackgroundPlayer = () => {
         labelAlwaysOn={true}
         value={Math.floor((videoProgress.played / videoProgress.duration) * 100)}
         onChange={(value) => {
-          if (playerRef.current) {
-            playerRef.current.seekTo(value / 100, "fraction");
+          const player = playerRef.current;
+          if (player && Number.isFinite(player.duration)) {
+            player.currentTime = (value / 100) * player.duration;
           }
         }}
       />
@@ -235,7 +236,9 @@ const BackgroundPlayer = () => {
               if (videoProgress.played < 5) {
                 recedeQueue();
               } else {
-                playerRef.current?.seekTo(0);
+                if (playerRef.current) {
+                  playerRef.current.currentTime = 0;
+                }
               }
             }}
           >
