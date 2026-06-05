@@ -141,3 +141,6 @@ tmp
 temp
 .temp.env
 *.sql
+
+kanidm/data/*
+!kanidm/data/.gitkeep

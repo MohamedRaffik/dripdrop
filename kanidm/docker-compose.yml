@@ -1,0 +1,10 @@
+services:
+  kanidm:
+    image: kanidm/server:latest
+    container_name: kanidm
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./data:/data
+    command: ["/sbin/kanidmd", "server"]

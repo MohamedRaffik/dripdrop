@@ -62,3 +62,20 @@ server: migrate
 .PHONY: worker
 worker: migrate
 	celery -A app.tasks.app beat --loglevel=info --detach && celery -A app.tasks.app worker -c $$WORKERS --loglevel=info
+
+.PHONY: kanidm-init
+kanidm-init:
+	mkdir -p kanidm/data
+	cp -n kanidm/server.toml kanidm/data/server.toml
+
+.PHONY: kanidm-configtest
+kanidm-configtest: kanidm-init
+	docker compose -f kanidm/docker-compose.yml run --rm kanidm /sbin/kanidmd configtest
+
+.PHONY: kanidm-up
+kanidm-up: kanidm-init
+	docker compose -f kanidm/docker-compose.yml up -d
+
+.PHONY: kanidm-down
+kanidm-down:
+	docker compose -f kanidm/docker-compose.yml down
