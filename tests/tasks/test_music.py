@@ -1,4 +1,5 @@
 import json
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import yt_dlp.utils
@@ -122,6 +123,56 @@ async def test_run_music_job_with_audio_url(
         assert tags.grouping == expected_grouping
 
 
+async def test_upload_embedded_artwork_skips_when_user_artwork_set(
+    create_user, create_music_job, test_image_url, monkeypatch
+):
+    user: User = await create_user()
+    music_job: MusicJob = await create_music_job(
+        email=user.email,
+        video_url="https://www.youtube.com/watch?v=C0DPdy98e4c",
+        artwork_url=test_image_url,
+    )
+    assert music_job.artwork_url == test_image_url
+
+    upload_file = AsyncMock()
+    monkeypatch.setattr("app.db.models.music.s3.upload_file", upload_file)
+
+    await music_job.upload_embedded_artwork(file_path="/tmp/test.mp3")
+
+    upload_file.assert_not_called()
+
+
+async def test_upload_embedded_artwork_uploads_when_no_user_artwork(
+    create_user, create_music_job, monkeypatch
+):
+    user: User = await create_user()
+    music_job: MusicJob = await create_music_job(
+        email=user.email,
+        video_url="https://www.youtube.com/watch?v=C0DPdy98e4c",
+    )
+    assert music_job.artwork_url is None
+
+    mock_artwork = MagicMock()
+    mock_artwork.data = b"thumbnail"
+    mock_artwork.mime = "image/jpeg"
+
+    mock_audio_tags = MagicMock()
+    mock_audio_tags.artwork = mock_artwork
+
+    monkeypatch.setattr(
+        "app.db.models.music.audiotags.AudioTags",
+        lambda file_path: mock_audio_tags,
+    )
+    upload_file = AsyncMock()
+    monkeypatch.setattr("app.db.models.music.s3.upload_file", upload_file)
+
+    await music_job.upload_embedded_artwork(file_path="/tmp/test.mp3")
+
+    upload_file.assert_called_once()
+    assert music_job.artwork_url is not None
+    assert music_job.artwork_filename is not None
+
+
 @pytest.mark.long
 async def test_run_music_job_with_file(
     create_user,
@@ -189,6 +240,8 @@ async def test_run_music_job_with_external_artwork(
     music_job: MusicJob = await create_music_job(
         email=user.email, video_url=test_audio_url, artwork_url=test_image_url
     )
+    expected_artwork_url = music_job.artwork_url
+    assert expected_artwork_url == test_image_url
 
     expected_title = music_job.title
     expected_artist = music_job.artist
@@ -206,7 +259,7 @@ async def test_run_music_job_with_external_artwork(
     assert music_job.completed is not None
     assert music_job.download_url is not None
     assert music_job.download_filename is not None
-    assert music_job.artwork_url is not None
+    assert music_job.artwork_url == expected_artwork_url
     assert music_job.artwork_filename is None
 
     async with AsyncClient() as client:

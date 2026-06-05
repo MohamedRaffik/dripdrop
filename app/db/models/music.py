@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import re
 import uuid
@@ -107,6 +108,28 @@ class MusicJob(Base):
                 response = await client.get(artwork_url)
                 if response.is_success and imagedownloader.is_image_link(response):
                     self.artwork_url = artwork_url
+
+    async def upload_embedded_artwork(self, file_path: str):
+        if self.artwork_url:
+            return
+
+        def _get_artwork():
+            audio_tags = audiotags.AudioTags(file_path=file_path)
+            return audio_tags.artwork
+
+        artwork = await asyncio.to_thread(_get_artwork)
+        if not artwork:
+            return
+
+        extension = artwork.mime.split("/")[-1] if artwork.mime else "jpeg"
+        filename = f"{settings.aws_s3_artwork_folder}/{self.id}/artwork.{extension}"
+        await s3.upload_file(
+            filename=filename,
+            body=artwork.data,
+            content_type=artwork.mime or f"image/{extension}",
+        )
+        self.artwork_url = s3.resolve_url(filename=filename)
+        self.artwork_filename = filename
 
     @classmethod
     async def upload_files(
