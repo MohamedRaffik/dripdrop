@@ -16,7 +16,7 @@ from fastapi import (
 )
 from sqlalchemy import select
 
-from app.db import MusicFile, MusicJob, WebDav
+from app.db import MusicFile, MusicJob
 from app.dependencies import AuthUser, DatabaseSession, get_authenticated_user
 from app.models import Pagination
 from app.models.music import (
@@ -82,19 +82,10 @@ async def create_job(
         music_file=music_file,
         artwork_url=form.artwork_url,
     )
-    webdav = await session.scalar(
-        select(WebDav).where(WebDav.email == user.email)
-    )
-    if webdav:
-        upload_to_webdav = (
-            True if form.upload_to_webdav is None else form.upload_to_webdav
-        )
-    else:
-        upload_to_webdav = False
     background_tasks.add_task(
         run_music_job.delay,
         music_job_id=str(music_job.id),
-        upload_to_webdav=upload_to_webdav,
+        upload_to_webdav=form.upload_to_webdav is True,
     )
     return None
 
