@@ -5,9 +5,9 @@ type MusicFormState =
       file: File;
       artworkUrl: string;
       resolvedArtworkUrl: string;
-      title?: string;
-      artist?: string;
-      album?: string;
+      title: string;
+      artist: string;
+      album: string;
       grouping?: string;
       uploadToWebdav: boolean;
     }
@@ -17,9 +17,9 @@ type MusicFormState =
       file: null;
       artworkUrl: string;
       resolvedArtworkUrl: string;
-      title?: string;
-      artist?: string;
-      album?: string;
+      title: string;
+      artist: string;
+      album: string;
       grouping?: string;
       uploadToWebdav: boolean;
     };

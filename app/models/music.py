@@ -37,13 +37,13 @@ class CreateMusicJob(BaseModel):
     file: Optional[UploadFile] = None
     video_url: Optional[HttpUrl] = None
     artwork_url: Optional[str] = None
-    title: Optional[str] = None
-    artist: Optional[str] = None
-    album: Optional[str] = None
+    title: str
+    artist: str
+    album: str
     grouping: Optional[str] = None
     upload_to_webdav: Optional[bool] = None
 
-    @field_validator("title", "artist", "album", "grouping", mode="before")
+    @field_validator("grouping", mode="before")
     @classmethod
     def empty_str_to_none(cls, value):
         if value == "":
@@ -56,9 +56,9 @@ class MusicJobResponse(Response):
 
     id: str
     user_email: str
-    title: str | None = None
-    artist: str | None = None
-    album: str | None = None
+    title: str
+    artist: str
+    album: str
     grouping: str | None = None
     artwork_url: str | None = None
     artwork_filename: str | None = None

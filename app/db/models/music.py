@@ -34,9 +34,9 @@ class MusicJob(Base):
         ),
         nullable=False,
     )
-    title: Mapped[str | None] = mapped_column(nullable=True)
-    artist: Mapped[str | None] = mapped_column(nullable=True)
-    album: Mapped[str | None] = mapped_column(nullable=True)
+    title: Mapped[str] = mapped_column(nullable=False)
+    artist: Mapped[str] = mapped_column(nullable=False)
+    album: Mapped[str] = mapped_column(nullable=False)
     grouping: Mapped[str | None] = mapped_column(nullable=True)
     artwork_url: Mapped[str | None] = mapped_column(nullable=True)
     artwork_filename: Mapped[str | None] = mapped_column(nullable=True)

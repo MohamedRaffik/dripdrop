@@ -123,11 +123,11 @@ async def test_create_job_with_file(
 
 
 async def test_create_job_with_video_url_without_metadata(
-    client, create_and_login_user, db_session, test_video_url
+    client, create_and_login_user, test_video_url
 ):
     """
     Test creating a job with a video url and no metadata fields. The endpoint
-    should return a 201 status.
+    should return a 422 status.
     """
 
     await create_and_login_user()
@@ -137,16 +137,7 @@ async def test_create_job_with_video_url_without_metadata(
             "video_url": test_video_url,
         },
     )
-    assert response.status_code == status.HTTP_201_CREATED
-
-    query = select(MusicJob)
-    music_jobs = (await db_session.scalars(query)).all()
-    assert len(music_jobs) == 1
-    music_job = music_jobs[0]
-    assert music_job.title is None
-    assert music_job.artist is None
-    assert music_job.album is None
-    assert music_job.grouping is None
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 @pytest.mark.parametrize(

@@ -72,15 +72,9 @@ const MusicForm = () => {
       if (data.resolvedArtworkUrl) {
         formData.append("artwork_url", data.resolvedArtworkUrl);
       }
-      if (data.title) {
-        formData.append("title", data.title);
-      }
-      if (data.artist) {
-        formData.append("artist", data.artist);
-      }
-      if (data.album) {
-        formData.append("album", data.album);
-      }
+      formData.append("title", data.title);
+      formData.append("artist", data.artist);
+      formData.append("album", data.album);
       if (data.grouping) {
         formData.append("grouping", data.grouping);
       }
@@ -302,13 +296,15 @@ const MusicForm = () => {
                 name="title"
                 control={control}
                 defaultValue={""}
+                rules={{ required: true }}
                 render={({ field, fieldState }) => (
                   <TextInput
                     {...field}
                     w="100%"
-                    error={fieldState.error?.message}
+                    error={fieldState.error?.type === "required" ? "Required" : ""}
                     label="Title"
                     placeholder="Enter Title"
+                    withAsterisk
                     disabled={getTagsStatus.isLoading || metadataLoading}
                     rightSection={getTagsStatus.isLoading || metadataLoading ? <Loader size="xs" /> : null}
                   />
@@ -318,13 +314,15 @@ const MusicForm = () => {
                 name="artist"
                 control={control}
                 defaultValue={""}
+                rules={{ required: true }}
                 render={({ field, fieldState }) => (
                   <TextInput
                     {...field}
                     w="100%"
-                    error={fieldState.error?.message}
+                    error={fieldState.error?.type === "required" ? "Required" : ""}
                     label="Artist"
                     placeholder="Enter Artist"
+                    withAsterisk
                     disabled={getTagsStatus.isLoading || metadataLoading}
                     rightSection={getTagsStatus.isLoading || metadataLoading ? <Loader size="xs" /> : null}
                   />
@@ -334,13 +332,15 @@ const MusicForm = () => {
                 name="album"
                 control={control}
                 defaultValue={""}
+                rules={{ required: true }}
                 render={({ field, fieldState }) => (
                   <TextInput
                     {...field}
                     w="100%"
-                    error={fieldState.error?.message}
+                    error={fieldState.error?.type === "required" ? "Required" : ""}
                     label="Album"
                     placeholder="Enter Album"
+                    withAsterisk
                     disabled={getTagsStatus.isLoading || metadataLoading}
                     rightSection={getTagsStatus.isLoading || metadataLoading ? <Loader size="xs" /> : null}
                   />
