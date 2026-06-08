@@ -17,8 +17,8 @@ import { showNotification } from "@mantine/notifications";
 import { useCallback, useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
-import { useCheckSessionQuery } from "../../api/auth";
 import { useLazyArtworkQuery, useCreateJobMutation, useLazyGroupingQuery, useTagsMutation } from "../../api/music";
+import { useWebdavQuery } from "../../api/webdav";
 import { isBase64, isValidImage, resolveAlbumFromTitle } from "../../utils/helpers";
 import { CreateMusicJob } from "../../api/generated/musicApi";
 
