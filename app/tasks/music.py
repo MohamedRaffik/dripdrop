@@ -147,7 +147,7 @@ async def run_music_job(self: QueueTask, music_job_id: str):
                 body=file_content,
                 content_type="audio/mpeg",
             )
-            if webdav:
+            if webdav and music_job.upload_to_webdav:
                 async with httpclient.AsyncClient() as client:
                     response = await client.put(
                         f"{webdav.url}/{new_filename}",

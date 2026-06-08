@@ -198,6 +198,7 @@ async def create_music_job(db_session: AsyncSession, faker: Faker):
         artist: str = None,
         album: str = None,
         grouping: str = None,
+        upload_to_webdav: bool = False,
         deleted: bool = False,
     ):
         music_job = MusicJob(
@@ -207,6 +208,7 @@ async def create_music_job(db_session: AsyncSession, faker: Faker):
             artist=artist or faker.name(),
             album=album or faker.word(),
             grouping=grouping,
+            upload_to_webdav=upload_to_webdav,
             deleted_at=faker.date_time(tzinfo=timezone.utc) if deleted else None,
         )
         db_session.add(music_job)

@@ -65,6 +65,7 @@ async def create_job(
         artist=form.artist,
         album=form.album,
         grouping=form.grouping,
+        upload_to_webdav=form.upload_to_webdav,
     )
     session.add(music_job)
     await session.commit()

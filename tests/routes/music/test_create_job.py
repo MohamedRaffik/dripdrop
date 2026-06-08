@@ -118,6 +118,29 @@ async def test_create_job_with_file(
     assert music_job.artist == "artist"
     assert music_job.album == "album"
     assert music_job.grouping == "grouping"
+    assert music_job.upload_to_webdav is False
+
+
+async def test_create_job_with_upload_to_webdav(
+    client, create_and_login_user, db_session, test_video_url
+):
+    await create_and_login_user()
+    response = await client.post(
+        URL,
+        data={
+            "title": "title",
+            "artist": "artist",
+            "album": "album",
+            "grouping": "grouping",
+            "video_url": test_video_url,
+            "upload_to_webdav": "true",
+        },
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+
+    query = select(MusicJob)
+    music_job = (await db_session.scalars(query)).one()
+    assert music_job.upload_to_webdav is True
 
 
 async def test_create_job_with_video_url(

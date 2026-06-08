@@ -38,6 +38,7 @@ class CreateMusicJob(BaseModel):
     artist: str
     album: str
     grouping: Optional[str] = None
+    upload_to_webdav: bool = False
 
 
 class MusicJobResponse(Response):
