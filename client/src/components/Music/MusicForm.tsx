@@ -33,7 +33,10 @@ const MusicForm = () => {
 
   const [createMusicJob, createJobStatus] = useCreateJobMutation();
   const sessionStatus = useCheckSessionQuery();
-  const hasWebdav = sessionStatus.data?.webdavConfigured ?? false;
+  const hasWebdav = useMemo(
+    () => sessionStatus.data?.webdavConfigured ?? false,
+    [sessionStatus.data?.webdavConfigured]
+  );
   const [getArtwork, getArtworkStatus] = useLazyArtworkQuery();
   const [getTags, getTagsStatus] = useTagsMutation();
   const [getGrouping, getGroupingStatus] = useLazyGroupingQuery();
