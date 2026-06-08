@@ -17,7 +17,12 @@ async def test_get_user_subscription_when_not_logged_in(client):
 
 
 async def test_get_user_subscriptions(
-    client, create_and_login_user, create_user, create_youtube_subscription, db_session
+    client,
+    create_and_login_user,
+    create_user,
+    create_youtube_subscription,
+    create_youtube_channel,
+    db_session,
 ):
     """
     Test get user subscription. The endpoint should return a 200 status
@@ -30,9 +35,18 @@ async def test_get_user_subscriptions(
     user_subscriptions: list[YoutubeSubscription] = []
 
     for i in range(10):
-        user_subscriptions.append(await create_youtube_subscription(email=user.email))
-        await create_youtube_subscription(email=user.email, deleted=True)
-        await create_youtube_subscription(email=other_user.email)
+        channel = await create_youtube_channel(title=f"channel-{i:02d}")
+        user_subscriptions.append(
+            await create_youtube_subscription(email=user.email, channel_id=channel.id)
+        )
+        deleted_channel = await create_youtube_channel(title=f"deleted-{i:02d}")
+        await create_youtube_subscription(
+            email=user.email, channel_id=deleted_channel.id, deleted=True
+        )
+        other_channel = await create_youtube_channel(title=f"other-{i:02d}")
+        await create_youtube_subscription(
+            email=other_user.email, channel_id=other_channel.id
+        )
 
     channels = await db_session.scalars(
         select(YoutubeChannel).where(
