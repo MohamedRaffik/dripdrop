@@ -4,15 +4,13 @@ import io
 import logging
 import re
 import shutil
+import tempfile
 import traceback
-import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
-import aiofiles.os
+import aiofiles
 import mutagen.id3
-
-from app.services import tempfiles
 
 logger = logging.getLogger(__name__)
 
@@ -114,15 +112,8 @@ class AudioTags:
 
     @classmethod
     async def read_tags(cls, file: bytes, filename: str):
-        TAGS_DIRECTORY = "tags"
-
-        tags_directory_path = await tempfiles.create_new_directory(
-            directory=TAGS_DIRECTORY
-        )
-        directory_id = str(uuid.uuid4())
-        directory_path = Path(tags_directory_path).joinpath(directory_id)
-        await aiofiles.os.mkdir(directory_path)
-        file_path = Path(directory_path).joinpath(filename)
+        directory_path = Path(await asyncio.to_thread(tempfile.mkdtemp))
+        file_path = directory_path.joinpath(filename)
         tags = Tags()
         try:
             async with aiofiles.open(file_path, mode="wb") as f:

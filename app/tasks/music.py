@@ -1,9 +1,9 @@
 import asyncio
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 import aiofiles
-import aiofiles.os
 from sqlalchemy import select
 from yt_dlp.utils import sanitize_filename
 
@@ -15,20 +15,18 @@ from app.services import (
     httpclient,
     imagedownloader,
     s3,
-    tempfiles,
     ytdlp,
 )
 from app.services.pubsub import PubSub
 from app.settings import settings
 from app.tasks.app import QueueTask, celery
 
-JOB_DIR = "music_jobs"
-
-
 async def retrieve_audio_file(music_job: MusicJob, cookies: str | None = None):
-    jobs_root_directory = await tempfiles.create_new_directory(JOB_DIR)
-    job_file_path = Path(jobs_root_directory).joinpath(str(music_job.id))
-    await aiofiles.os.mkdir(job_file_path)
+    job_file_path = Path(
+        await asyncio.to_thread(
+            tempfile.mkdtemp, prefix=f"music_job_{music_job.id}_"
+        )
+    )
 
     filename = None
     if music_job.filename_url:
