@@ -18,6 +18,9 @@ const config = {
     "./src/api/generated/webdavApi.ts": {
       filterEndpoints: [/webdav/i],
     },
+    "./src/api/generated/cookiesApi.ts": {
+      filterEndpoints: [/cookies/i],
+    },
   },
   exportName: "api",
   hooks: { queries: true, lazyQueries: true, mutations: true },
