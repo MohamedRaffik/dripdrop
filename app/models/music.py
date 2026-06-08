@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 from app.models import Response
 
 
-class GroupingResponse(Response):
+class MetadataResponse(Response):
     grouping: Optional[str] = None
     title: Optional[str] = None
     artist: Optional[str] = None

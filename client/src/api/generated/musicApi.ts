@@ -29,12 +29,12 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getGroupingApiMusicGroupingGet: build.query<
-      GetGroupingApiMusicGroupingGetApiResponse,
-      GetGroupingApiMusicGroupingGetApiArg
+    getMetadataApiMusicMetadataGet: build.query<
+      GetMetadataApiMusicMetadataGetApiResponse,
+      GetMetadataApiMusicMetadataGetApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/music/grouping`,
+        url: `/api/music/metadata`,
         params: {
           video_url: queryArg,
         },
@@ -71,8 +71,8 @@ export type GetJobsApiMusicJobsListGetApiArg = {
   page: number;
   perPage: number;
 };
-export type GetGroupingApiMusicGroupingGetApiResponse = /** status 200 Successful Response */ GroupingResponse;
-export type GetGroupingApiMusicGroupingGetApiArg = string;
+export type GetMetadataApiMusicMetadataGetApiResponse = /** status 200 Successful Response */ MetadataResponse;
+export type GetMetadataApiMusicMetadataGetApiArg = string;
 export type GetArtworkApiMusicArtworkGetApiResponse = /** status 200 Successful Response */ ResolvedArtworkResponse;
 export type GetArtworkApiMusicArtworkGetApiArg = string;
 export type GetTagsApiMusicTagsPostApiResponse = /** status 200 Successful Response */ TagsResponse;
@@ -115,7 +115,7 @@ export type MusicJobListResponse = {
   jobs: MusicJobResponse[];
   totalPages: number;
 };
-export type GroupingResponse = {
+export type MetadataResponse = {
   grouping?: string | null;
   title?: string | null;
   artist?: string | null;
@@ -139,8 +139,8 @@ export const {
   useDeleteJobApiMusicJobsJobIdDeleteDeleteMutation,
   useGetJobsApiMusicJobsListGetQuery,
   useLazyGetJobsApiMusicJobsListGetQuery,
-  useGetGroupingApiMusicGroupingGetQuery,
-  useLazyGetGroupingApiMusicGroupingGetQuery,
+  useGetMetadataApiMusicMetadataGetQuery,
+  useLazyGetMetadataApiMusicMetadataGetQuery,
   useGetArtworkApiMusicArtworkGetQuery,
   useLazyGetArtworkApiMusicArtworkGetQuery,
   useGetTagsApiMusicTagsPostMutation,

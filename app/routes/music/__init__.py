@@ -7,7 +7,7 @@ from pydantic import HttpUrl
 
 from app.dependencies import get_authenticated_user
 from app.models.music import (
-    GroupingResponse,
+    MetadataResponse,
     ResolvedArtworkResponse,
     TagsResponse,
 )
@@ -28,11 +28,11 @@ router.include_router(jobs_router)
 
 
 @router.get(
-    "/grouping",
-    response_model=GroupingResponse,
-    responses={status.HTTP_400_BAD_REQUEST: {"description": "Unable to get grouping."}},
+    "/metadata",
+    response_model=MetadataResponse,
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Unable to get metadata."}},
 )
-async def get_grouping(video_url: Annotated[HttpUrl, Query()]):
+async def get_metadata(video_url: Annotated[HttpUrl, Query()]):
     try:
         actual_video_url = video_url.unicode_string()
         video_info = await ytdlp.extract_video_info(url=actual_video_url)
@@ -42,11 +42,11 @@ async def get_grouping(video_url: Annotated[HttpUrl, Query()]):
             grouping = await google.get_video_uploader(video_id=video_id)
         else:
             grouping = video_info.get("uploader")
-        return GroupingResponse(grouping=grouping, **metadata)
+        return MetadataResponse(grouping=grouping, **metadata)
     except Exception:
         logger.exception(traceback.format_exc())
         raise HTTPException(
-            detail="Unable to get grouping.", status_code=status.HTTP_400_BAD_REQUEST
+            detail="Unable to get metadata.", status_code=status.HTTP_400_BAD_REQUEST
         )
 
 
