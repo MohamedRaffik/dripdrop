@@ -125,6 +125,9 @@ async def run_music_job(self: QueueTask, music_job_id: str):
         ):
             raise Exception("File not found")
 
+        if music_job.video_url and not music_job.artwork_url:
+            await music_job.upload_embedded_artwork(file_path=filename)
+
         artwork_info = await get_artwork_info(music_job=music_job)
 
         await asyncio.to_thread(

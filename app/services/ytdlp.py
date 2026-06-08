@@ -16,6 +16,7 @@ def _build_ydl_opts(download_path: str, cookies: str | None = None) -> tuple[dic
     ydl_opts = {
         "format": "best",
         "fixup": "never",
+        "noplaylist": True,
         "writethumbnail": True,
         "postprocessors": [
             {
@@ -57,7 +58,7 @@ async def download_audio_from_video(
 
 async def extract_video_info(url: str, cookies: str | None = None):
     def _extract_video_info():
-        ydl_opts = {}
+        ydl_opts = {"noplaylist": True}
         cookie_file_path = None
         if cookies:
             cookie_file_path = _write_cookies_to_tempfile(cookies)

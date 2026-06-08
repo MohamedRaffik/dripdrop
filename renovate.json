@@ -19,7 +19,9 @@
     },
     {
       "matchPackagePatterns": ["^eslint"],
-      "groupName": "eslint"
+      "groupName": "eslint",
+      "groupSlug": "eslint",
+      "separateMajorMinor": false
     },
     {
       "matchPackageNames": ["lodash", "@types/lodash"],

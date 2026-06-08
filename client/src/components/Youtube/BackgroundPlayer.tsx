@@ -17,7 +17,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CgPlayTrackNext, CgPlayTrackPrev } from "react-icons/cg";
 import { FaAngleUp, FaPause, FaPlay } from "react-icons/fa";
 
@@ -49,10 +49,14 @@ const BackgroundPlayer = () => {
   const [queueParams, setQueueParams] = useState(params);
   const videosStatus = useYoutubeVideosQuery(queueParams ?? skipToken);
 
-  const [videoProgress, setVideoProgress] = useState({
-    duration: 0,
-    played: 0,
-  });
+  const [duration, setDuration] = useState(0);
+  const [playedSeconds, setPlayedSeconds] = useState(0);
+  const [seekValue, setSeekValue] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
+  const seekingRef = useRef(false);
+
+  const sliderValue = duration > 0 ? (isSeeking ? seekValue : (playedSeconds / duration) * 100) : 0;
+  const displayedSeconds = isSeeking ? (seekValue / 100) * duration : playedSeconds;
 
   const [expand, { toggle: toggleExpand }] = useDisclosure(false);
   const { footerRef } = useFooter();
@@ -72,8 +76,53 @@ const BackgroundPlayer = () => {
   };
 
   useEffect(() => {
-    setVideoProgress({ played: 0, duration: 0 });
+    seekingRef.current = false;
+    setIsSeeking(false);
+    setDuration(0);
+    setPlayedSeconds(0);
+    setSeekValue(0);
   }, [currentVideo?.id]);
+
+  const handleDuration = useCallback((nextDuration: number) => {
+    setDuration(nextDuration);
+  }, []);
+
+  const handleProgress = useCallback((playedSeconds: number) => {
+    if (seekingRef.current) {
+      return;
+    }
+    setPlayedSeconds(playedSeconds);
+  }, []);
+
+  const handleSeekChange = useCallback(
+    (value: number) => {
+      seekingRef.current = true;
+      setIsSeeking(true);
+      setSeekValue(value);
+
+      const player = playerRef.current;
+      if (player && Number.isFinite(player.duration)) {
+        player.currentTime = (value / 100) * player.duration;
+      }
+    },
+    [playerRef]
+  );
+
+  const handleSeekChangeEnd = useCallback(
+    (value: number) => {
+      seekingRef.current = false;
+      setIsSeeking(false);
+
+      const player = playerRef.current;
+      if (player && Number.isFinite(player.duration)) {
+        const seconds = (value / 100) * player.duration;
+        player.currentTime = seconds;
+        setPlayedSeconds(seconds);
+      }
+      setSeekValue(value);
+    },
+    [playerRef]
+  );
 
   useEffect(() => {
     setQueueParams(params);
@@ -115,12 +164,8 @@ const BackgroundPlayer = () => {
                 playing={playing}
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
-                onDuration={(duration) => {
-                  setVideoProgress({ ...videoProgress, duration });
-                }}
-                onProgress={(state) => {
-                  setVideoProgress({ ...videoProgress, played: state.playedSeconds });
-                }}
+                onDuration={handleDuration}
+                onProgress={(state) => handleProgress(state.playedSeconds)}
                 onEnd={() => advanceQueue()}
               />
             </Grid.Col>
@@ -181,18 +226,18 @@ const BackgroundPlayer = () => {
       <Slider
         w={{ base: "90%", md: "95%" }}
         py="lg"
+        step={0.1}
+        min={0}
+        max={100}
         marks={[
           { value: 0, label: "0:00" },
-          { value: 100, label: convertToTimeString(videoProgress.duration) },
+          { value: 100, label: convertToTimeString(duration) },
         ]}
-        label={convertToTimeString(videoProgress.played)}
+        label={convertToTimeString(displayedSeconds)}
         labelAlwaysOn={true}
-        value={Math.floor((videoProgress.played / videoProgress.duration) * 100)}
-        onChange={(value) => {
-          if (playerRef.current) {
-            playerRef.current.seekTo(value / 100, "fraction");
-          }
-        }}
+        value={sliderValue}
+        onChange={handleSeekChange}
+        onChangeEnd={handleSeekChangeEnd}
       />
       {VideoPlayerOverlayPortal}
       <Group w={{ base: "90%", md: "95%" }} gap="xl" justify="center" wrap="nowrap" style={{ overflowX: "hidden" }}>
@@ -232,10 +277,14 @@ const BackgroundPlayer = () => {
             className="hover-darken"
             variant="transparent"
             onClick={() => {
-              if (videoProgress.played < 5) {
+              if (playedSeconds < 5) {
                 recedeQueue();
               } else {
-                playerRef.current?.seekTo(0);
+                if (playerRef.current) {
+                  playerRef.current.currentTime = 0;
+                }
+                setPlayedSeconds(0);
+                setSeekValue(0);
               }
             }}
           >
