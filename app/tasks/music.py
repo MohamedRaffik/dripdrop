@@ -104,7 +104,9 @@ async def on_failed_music_job(self: QueueTask, exc, task_id, args, kwargs, einfo
         on_failed_music_job(*args, **kwargs)
     ),
 )
-async def run_music_job(self: QueueTask, music_job_id: str):
+async def run_music_job(
+    self: QueueTask, music_job_id: str, upload_to_webdav: bool = False
+):
     pubsub = PubSub(channels=[PubSub.Channels.MUSIC_JOB_UPDATE])
     async with self.db_session() as db_session:
         music_job = await db_session.get_one(MusicJob, music_job_id)
@@ -147,7 +149,7 @@ async def run_music_job(self: QueueTask, music_job_id: str):
                 body=file_content,
                 content_type="audio/mpeg",
             )
-            if webdav:
+            if webdav and upload_to_webdav:
                 async with httpclient.AsyncClient() as client:
                     response = await client.put(
                         f"{webdav.url}/{new_filename}",

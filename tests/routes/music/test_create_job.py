@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 from fastapi import status
 from sqlalchemy import select
@@ -118,6 +120,45 @@ async def test_create_job_with_file(
     assert music_job.artist == "artist"
     assert music_job.album == "album"
     assert music_job.grouping == "grouping"
+
+
+@pytest.mark.parametrize(
+    "upload_to_webdav,expected",
+    [
+        (None, False),
+        ("true", True),
+        ("false", False),
+    ],
+)
+async def test_create_job_upload_to_webdav(
+    client,
+    create_and_login_user,
+    create_webdav,
+    test_video_url,
+    monkeypatch,
+    upload_to_webdav,
+    expected,
+):
+    user = await create_and_login_user()
+    await create_webdav(email=user.email)
+    mock_task = MagicMock()
+    monkeypatch.setattr("app.routes.music.jobs.run_music_job.delay", mock_task)
+
+    data = {
+        "title": "title",
+        "artist": "artist",
+        "album": "album",
+        "grouping": "grouping",
+        "video_url": test_video_url,
+    }
+    if upload_to_webdav is not None:
+        data["upload_to_webdav"] = upload_to_webdav
+
+    response = await client.post(URL, data=data)
+    assert response.status_code == status.HTTP_201_CREATED
+
+    mock_task.assert_called_once()
+    assert mock_task.call_args.kwargs["upload_to_webdav"] is expected
 
 
 async def test_create_job_with_video_url(
