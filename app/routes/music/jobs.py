@@ -65,7 +65,6 @@ async def create_job(
         artist=form.artist,
         album=form.album,
         grouping=form.grouping,
-        upload_to_webdav=form.upload_to_webdav,
     )
     session.add(music_job)
     await session.commit()
@@ -83,7 +82,11 @@ async def create_job(
         music_file=music_file,
         artwork_url=form.artwork_url,
     )
-    background_tasks.add_task(run_music_job.delay, music_job_id=str(music_job.id))
+    background_tasks.add_task(
+        run_music_job.delay,
+        music_job_id=str(music_job.id),
+        upload_to_webdav=form.upload_to_webdav,
+    )
     return None
 
 

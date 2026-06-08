@@ -51,7 +51,6 @@ class MusicJob(Base):
     failed: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True
     )
-    upload_to_webdav: Mapped[bool] = mapped_column(nullable=False, default=False)
     deleted_at: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True
     )

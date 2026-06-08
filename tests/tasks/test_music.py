@@ -299,7 +299,7 @@ async def test_run_music_job_with_webdav_upload(
         password=settings.test_webdav_password,
     )
     music_job: MusicJob = await create_music_job(
-        email=user.email, video_url=test_audio_url, upload_to_webdav=True
+        email=user.email, video_url=test_audio_url
     )
 
     expected_title = music_job.title
@@ -307,7 +307,9 @@ async def test_run_music_job_with_webdav_upload(
     expected_album = music_job.album
     expected_grouping = music_job.grouping
 
-    await run_music_job(music_job_id=str(music_job.id))
+    await run_music_job(
+        music_job_id=str(music_job.id), upload_to_webdav=True
+    )
 
     await db_session.refresh(music_job)
 
@@ -351,10 +353,12 @@ async def test_run_music_job_skips_webdav_when_disabled(
         password=settings.test_webdav_password,
     )
     music_job: MusicJob = await create_music_job(
-        email=user.email, video_url=test_audio_url, upload_to_webdav=False
+        email=user.email, video_url=test_audio_url
     )
 
-    await run_music_job(music_job_id=str(music_job.id))
+    await run_music_job(
+        music_job_id=str(music_job.id), upload_to_webdav=False
+    )
 
     await db_session.refresh(music_job)
 
