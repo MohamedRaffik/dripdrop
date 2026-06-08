@@ -22,7 +22,7 @@ from app.db import (
     engine,
     session_maker,
 )
-from app.services import httpclient, s3, tempfiles
+from app.services import httpclient, s3
 from app.services.pubsub import PubSub
 from app.settings import ENV, settings
 
@@ -43,13 +43,6 @@ async def mock_request():
 @pytest.fixture(scope="function", autouse=True)
 async def env():
     assert settings.env == ENV.TESTING
-
-
-@pytest.fixture(scope="function", autouse=True)
-async def init_temp():
-    await tempfiles.create_temp_directory()
-    yield
-    await tempfiles.cleanup_temp_directory()
 
 
 @pytest.fixture(scope="session", autouse=True)
