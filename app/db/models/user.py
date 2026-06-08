@@ -48,6 +48,10 @@ class User(Base):
         "WebDav", back_populates="user", uselist=False
     )
 
+    @property
+    def webdav_configured(self) -> bool:
+        return self.webdav is not None
+
     def set_password(self, new_password: str):
         self.password = self.hash_password(new_password)
 

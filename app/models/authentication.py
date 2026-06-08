@@ -30,6 +30,7 @@ class PasswordReset(BaseModel):
 class UserResponse(Response):
     email: str
     admin: bool
+    webdav_configured: bool
 
 
 class AuthenticatedResponse(Response):
