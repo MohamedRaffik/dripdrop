@@ -14,6 +14,7 @@ from app.db import (
     MusicJob,
     User,
     WebDav,
+    Cookies,
     YoutubeChannel,
     YoutubeSubscription,
     YoutubeVideo,
@@ -314,5 +315,19 @@ async def create_webdav(db_session: AsyncSession, faker: Faker):
         db_session.add(webdav)
         await db_session.commit()
         return webdav
+
+    return _run
+
+
+@pytest.fixture(scope="function")
+async def create_cookies(db_session: AsyncSession, faker: Faker):
+    async def _run(email: str, cookies: str = None):
+        stored_cookies = Cookies(
+            email=email,
+            cookies=cookies or faker.text(),
+        )
+        db_session.add(stored_cookies)
+        await db_session.commit()
+        return stored_cookies
 
     return _run
