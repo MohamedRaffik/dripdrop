@@ -69,9 +69,15 @@ const MusicForm = () => {
       if (data.resolvedArtworkUrl) {
         formData.append("artwork_url", data.resolvedArtworkUrl);
       }
-      formData.append("title", data.title);
-      formData.append("artist", data.artist);
-      formData.append("album", data.album);
+      if (data.title) {
+        formData.append("title", data.title);
+      }
+      if (data.artist) {
+        formData.append("artist", data.artist);
+      }
+      if (data.album) {
+        formData.append("album", data.album);
+      }
       if (data.grouping) {
         formData.append("grouping", data.grouping);
       }
@@ -145,19 +151,32 @@ const MusicForm = () => {
   }, [getFileTags, watchFields.file]);
 
   useEffect(() => {
-    if (watchFields.title) {
+    if (watchFields.title && !watchFields.album) {
       setValue("album", resolveAlbumFromTitle(watchFields.title));
     }
-  }, [setValue, watchFields.title]);
+  }, [setValue, watchFields.album, watchFields.title]);
 
-  const resolveGrouping = useCallback(
+  const resolveVideoMetadata = useCallback(
     async (videoUrl: string) => {
       if (videoUrl) {
         if (URL.canParse(videoUrl)) {
           const status = await getGrouping(videoUrl);
           if (status.isSuccess) {
-            const { grouping } = status.data;
-            setValue("grouping", grouping);
+            const { grouping, title, artist, album } = status.data;
+            if (grouping) {
+              setValue("grouping", grouping);
+            }
+            if (title) {
+              setValue("title", title);
+            }
+            if (artist) {
+              setValue("artist", artist);
+            }
+            if (album) {
+              setValue("album", album);
+            } else if (title) {
+              setValue("album", resolveAlbumFromTitle(title));
+            }
           }
         }
       }
@@ -166,8 +185,8 @@ const MusicForm = () => {
   );
 
   useEffect(() => {
-    resolveGrouping(debouncedVideoUrl || "");
-  }, [debouncedVideoUrl, resolveGrouping]);
+    resolveVideoMetadata(debouncedVideoUrl || "");
+  }, [debouncedVideoUrl, resolveVideoMetadata]);
 
   return (
     <Stack>
@@ -277,17 +296,15 @@ const MusicForm = () => {
                 name="title"
                 control={control}
                 defaultValue={""}
-                rules={{ required: true }}
                 render={({ field, fieldState }) => (
                   <TextInput
                     {...field}
                     w="100%"
-                    error={fieldState.error?.type === "required" ? "Required" : ""}
+                    error={fieldState.error?.message}
                     label="Title"
                     placeholder="Enter Title"
-                    withAsterisk
-                    disabled={getTagsStatus.isLoading}
-                    rightSection={getTagsStatus.isLoading ? <Loader size="xs" /> : null}
+                    disabled={getTagsStatus.isLoading || groupingLoading}
+                    rightSection={getTagsStatus.isLoading || groupingLoading ? <Loader size="xs" /> : null}
                   />
                 )}
               />
@@ -295,17 +312,15 @@ const MusicForm = () => {
                 name="artist"
                 control={control}
                 defaultValue={""}
-                rules={{ required: true }}
                 render={({ field, fieldState }) => (
                   <TextInput
                     {...field}
                     w="100%"
-                    error={fieldState.error?.type === "required" ? "Required" : ""}
+                    error={fieldState.error?.message}
                     label="Artist"
                     placeholder="Enter Artist"
-                    withAsterisk
-                    disabled={getTagsStatus.isLoading}
-                    rightSection={getTagsStatus.isLoading ? <Loader size="xs" /> : null}
+                    disabled={getTagsStatus.isLoading || groupingLoading}
+                    rightSection={getTagsStatus.isLoading || groupingLoading ? <Loader size="xs" /> : null}
                   />
                 )}
               />
@@ -313,17 +328,15 @@ const MusicForm = () => {
                 name="album"
                 control={control}
                 defaultValue={""}
-                rules={{ required: true }}
                 render={({ field, fieldState }) => (
                   <TextInput
                     {...field}
                     w="100%"
-                    error={fieldState.error?.type === "required" ? "Required" : ""}
+                    error={fieldState.error?.message}
                     label="Album"
                     placeholder="Enter Album"
-                    withAsterisk
-                    disabled={getTagsStatus.isLoading}
-                    rightSection={getTagsStatus.isLoading ? <Loader size="xs" /> : null}
+                    disabled={getTagsStatus.isLoading || groupingLoading}
+                    rightSection={getTagsStatus.isLoading || groupingLoading ? <Loader size="xs" /> : null}
                   />
                 )}
               />

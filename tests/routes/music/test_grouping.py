@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import status
@@ -37,10 +37,9 @@ async def test_grouping_with_failed_to_retrieve(
     failed response. The endpoint should return a 400 response.
     """
 
-    mock_get_video_uploader = MagicMock()
-    mock_get_video_uploader.return_value = None
+    mock_extract_video_info = AsyncMock(side_effect=Exception("yt-dlp failed"))
     monkeypatch.setattr(
-        "app.services.google.get_video_uploader", mock_get_video_uploader
+        "app.routes.music.ytdlp.extract_video_info", mock_extract_video_info
     )
 
     await create_and_login_user()
@@ -50,6 +49,35 @@ async def test_grouping_with_failed_to_retrieve(
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"detail": "Unable to get grouping."}
+
+
+async def test_grouping_returns_metadata_from_ytdlp(
+    client, create_and_login_user, monkeypatch
+):
+    mock_extract_video_info = AsyncMock(
+        return_value={
+            "title": "Song Title",
+            "artist": "Song Artist",
+            "album": "Song Album",
+            "uploader": "Channel Name",
+        }
+    )
+    monkeypatch.setattr(
+        "app.routes.music.ytdlp.extract_video_info", mock_extract_video_info
+    )
+
+    await create_and_login_user()
+    response = await client.get(
+        URL,
+        params={"video_url": "https://vimeo.com/876518552"},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "grouping": "Channel Name",
+        "title": "Song Title",
+        "artist": "Song Artist",
+        "album": "Song Album",
+    }
 
 
 @pytest.mark.xfail(reason="yt-dlp fails to run in github actions")

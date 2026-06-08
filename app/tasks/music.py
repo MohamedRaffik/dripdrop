@@ -59,15 +59,52 @@ async def retrieve_audio_file(music_job: MusicJob):
     return filename
 
 
+async def resolve_missing_metadata(music_job: MusicJob, filename: str):
+    if music_job.title and music_job.artist and music_job.album:
+        return
+
+    def _read_file_tags():
+        audio_tag_service = audiotags.AudioTags(file_path=filename)
+        return (
+            audio_tag_service.title,
+            audio_tag_service.artist,
+            audio_tag_service.album,
+        )
+
+    file_title, file_artist, file_album = await asyncio.to_thread(_read_file_tags)
+
+    if not music_job.title:
+        music_job.title = file_title
+    if not music_job.artist:
+        music_job.artist = file_artist
+    if not music_job.album:
+        music_job.album = file_album
+
+    if music_job.video_url and (
+        not music_job.title or not music_job.artist or not music_job.album
+    ):
+        video_info = await ytdlp.extract_video_info(url=music_job.video_url)
+        metadata = ytdlp.parse_video_metadata(video_info)
+        if not music_job.title:
+            music_job.title = metadata.get("title")
+        if not music_job.artist:
+            music_job.artist = metadata.get("artist")
+        if not music_job.album:
+            music_job.album = metadata.get("album")
+
+
 def update_audio_tags(
     music_job: MusicJob,
     filename: str,
     artwork_info: imagedownloader.RetrievedArtwork,
 ):
     audio_tag_service = audiotags.AudioTags(file_path=filename)
-    audio_tag_service.title = music_job.title
-    audio_tag_service.artist = music_job.artist
-    audio_tag_service.album = music_job.album
+    if music_job.title:
+        audio_tag_service.title = music_job.title
+    if music_job.artist:
+        audio_tag_service.artist = music_job.artist
+    if music_job.album:
+        audio_tag_service.album = music_job.album
     if music_job.grouping:
         audio_tag_service.grouping = music_job.grouping
     if artwork_info:
@@ -115,6 +152,8 @@ async def run_music_job(self: QueueTask, music_job_id: str):
         if not (filename := await retrieve_audio_file(music_job=music_job)):
             raise Exception("File not found")
 
+        await resolve_missing_metadata(music_job=music_job, filename=filename)
+
         if music_job.video_url and not music_job.artwork_url:
             await music_job.upload_embedded_artwork(file_path=filename)
 
@@ -128,8 +167,8 @@ async def run_music_job(self: QueueTask, music_job_id: str):
         )
 
         new_filename = "{title} {artist}.mp3".format(
-            title=sanitize_filename(music_job.title.lower()),
-            artist=sanitize_filename(music_job.artist.lower()),
+            title=sanitize_filename((music_job.title or "unknown").lower()),
+            artist=sanitize_filename((music_job.artist or "unknown").lower()),
         )
         new_filepath = "{folder}/{job_id}/{filename}".format(
             folder=settings.aws_s3_music_folder,

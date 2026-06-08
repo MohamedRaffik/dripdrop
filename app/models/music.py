@@ -2,13 +2,16 @@ from datetime import datetime
 from typing import Literal, Optional
 
 from fastapi import UploadFile
-from pydantic import BaseModel, ConfigDict, HttpUrl
+from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 
 from app.models import Response
 
 
 class GroupingResponse(Response):
-    grouping: str
+    grouping: Optional[str] = None
+    title: Optional[str] = None
+    artist: Optional[str] = None
+    album: Optional[str] = None
 
 
 class ResolvedArtworkResponse(Response):
@@ -34,10 +37,17 @@ class CreateMusicJob(BaseModel):
     file: Optional[UploadFile] = None
     video_url: Optional[HttpUrl] = None
     artwork_url: Optional[str] = None
-    title: str
-    artist: str
-    album: str
+    title: Optional[str] = None
+    artist: Optional[str] = None
+    album: Optional[str] = None
     grouping: Optional[str] = None
+
+    @field_validator("title", "artist", "album", "grouping", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, value):
+        if value == "":
+            return None
+        return value
 
 
 class MusicJobResponse(Response):
@@ -45,9 +55,9 @@ class MusicJobResponse(Response):
 
     id: str
     user_email: str
-    title: str
-    artist: str
-    album: str
+    title: str | None = None
+    artist: str | None = None
+    album: str | None = None
     grouping: str | None = None
     artwork_url: str | None = None
     artwork_filename: str | None = None

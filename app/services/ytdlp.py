@@ -38,3 +38,15 @@ async def extract_video_info(url: str):
             return ydl.extract_info(url, download=False)
 
     return await asyncio.to_thread(_extract_video_info)
+
+
+def parse_video_metadata(video_info: dict) -> dict[str, str | None]:
+    title = video_info.get("track") or video_info.get("title")
+    artist = (
+        video_info.get("artist")
+        or video_info.get("creator")
+        or video_info.get("uploader")
+        or video_info.get("channel")
+    )
+    album = video_info.get("album")
+    return {"title": title, "artist": artist, "album": album}

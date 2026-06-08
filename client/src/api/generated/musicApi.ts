@@ -89,17 +89,17 @@ export type CreateMusicJob = {
   file?: Blob | null;
   video_url?: string | null;
   artwork_url?: string | null;
-  title: string;
-  artist: string;
-  album: string;
+  title?: string | null;
+  artist?: string | null;
+  album?: string | null;
   grouping?: string | null;
 };
 export type MusicJobResponse = {
   id: string;
   userEmail: string;
-  title: string;
-  artist: string;
-  album: string;
+  title?: string | null;
+  artist?: string | null;
+  album?: string | null;
   grouping?: string | null;
   artworkUrl?: string | null;
   artworkFilename?: string | null;
@@ -116,7 +116,10 @@ export type MusicJobListResponse = {
   totalPages: number;
 };
 export type GroupingResponse = {
-  grouping: string;
+  grouping?: string | null;
+  title?: string | null;
+  artist?: string | null;
+  album?: string | null;
 };
 export type ResolvedArtworkResponse = {
   resolvedArtworkUrl: string;

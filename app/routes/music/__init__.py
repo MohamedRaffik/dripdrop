@@ -35,13 +35,14 @@ router.include_router(jobs_router)
 async def get_grouping(video_url: Annotated[HttpUrl, Query()]):
     try:
         actual_video_url = video_url.unicode_string()
+        video_info = await ytdlp.extract_video_info(url=actual_video_url)
+        metadata = ytdlp.parse_video_metadata(video_info)
         if "youtube.com" in actual_video_url:
             video_id = parse_youtube_video_id(actual_video_url)
-            uploader = await google.get_video_uploader(video_id=video_id)
+            grouping = await google.get_video_uploader(video_id=video_id)
         else:
-            video_info = await ytdlp.extract_video_info(url=actual_video_url)
-            uploader = video_info.get("uploader")
-        return GroupingResponse(grouping=uploader)
+            grouping = video_info.get("uploader")
+        return GroupingResponse(grouping=grouping, **metadata)
     except Exception:
         logger.exception(traceback.format_exc())
         raise HTTPException(
