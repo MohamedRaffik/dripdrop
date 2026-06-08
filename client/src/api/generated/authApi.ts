@@ -78,7 +78,6 @@ export type ResetPasswordApiAuthResetPostApiArg = PasswordReset;
 export type UserResponse = {
   email: string;
   admin: boolean;
-  webdavConfigured: boolean;
 };
 export type ValidationError = {
   loc: (string | number)[];

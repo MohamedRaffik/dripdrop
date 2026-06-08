@@ -32,15 +32,12 @@ const MusicForm = () => {
   const [debouncedVideoUrl] = useDebouncedValue(watchFields.videoUrl, 500);
 
   const [createMusicJob, createJobStatus] = useCreateJobMutation();
-  const sessionStatus = useCheckSessionQuery();
+  const webdavStatus = useWebdavQuery();
   const [getArtwork, getArtworkStatus] = useLazyArtworkQuery();
   const [getTags, getTagsStatus] = useTagsMutation();
   const [getGrouping, getGroupingStatus] = useLazyGroupingQuery();
 
-  const hasWebdav = useMemo(
-    () => sessionStatus.data?.webdavConfigured ?? false,
-    [sessionStatus.data?.webdavConfigured]
-  );
+  const hasWebdav = useMemo(() => webdavStatus.isSuccess, [webdavStatus.isSuccess]);
   const artworkLoading = useMemo(
     () => getArtworkStatus.isLoading || getArtworkStatus.isFetching,
     [getArtworkStatus.isFetching, getArtworkStatus.isLoading]

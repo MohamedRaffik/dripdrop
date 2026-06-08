@@ -24,26 +24,7 @@ async def test_session_when_logged_in(client, create_and_login_user):
     user: User = await create_and_login_user()
     response = await client.get(URL)
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {
-        "email": user.email,
-        "admin": user.admin,
-        "webdavConfigured": False,
-    }
-
-
-async def test_session_when_logged_in_with_webdav(
-    client, create_and_login_user, create_webdav
-):
-    user = await create_and_login_user()
-    await create_webdav(email=user.email)
-
-    response = await client.get(URL)
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {
-        "email": user.email,
-        "admin": user.admin,
-        "webdavConfigured": True,
-    }
+    assert response.json() == {"email": user.email, "admin": user.admin}
 
 
 async def test_session_when_logged_in_as_admin(client, create_and_login_user):
@@ -55,8 +36,4 @@ async def test_session_when_logged_in_as_admin(client, create_and_login_user):
     user: User = await create_and_login_user(admin=True)
     response = await client.get(URL)
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {
-        "email": user.email,
-        "admin": user.admin,
-        "webdavConfigured": False,
-    }
+    assert response.json() == {"email": user.email, "admin": user.admin}

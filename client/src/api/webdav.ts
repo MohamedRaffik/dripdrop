@@ -10,11 +10,11 @@ const enhancedApi = api.enhanceEndpoints({
       providesTags: [Tags.WEBDAV],
     },
     updateWebdavApiWebdavPost: {
-      invalidatesTags: [Tags.WEBDAV, Tags.USER],
+      invalidatesTags: [Tags.WEBDAV],
       transformErrorResponse,
     },
     deleteWebdavApiWebdavDelete: {
-      invalidatesTags: [Tags.WEBDAV, Tags.USER],
+      invalidatesTags: [Tags.WEBDAV],
     },
   },
 });
