@@ -33,19 +33,18 @@ const MusicForm = () => {
 
   const [createMusicJob, createJobStatus] = useCreateJobMutation();
   const sessionStatus = useCheckSessionQuery();
-  const hasWebdav = useMemo(
-    () => sessionStatus.data?.webdavConfigured ?? false,
-    [sessionStatus.data?.webdavConfigured]
-  );
   const [getArtwork, getArtworkStatus] = useLazyArtworkQuery();
   const [getTags, getTagsStatus] = useTagsMutation();
   const [getGrouping, getGroupingStatus] = useLazyGroupingQuery();
 
+  const hasWebdav = useMemo(
+    () => sessionStatus.data?.webdavConfigured ?? false,
+    [sessionStatus.data?.webdavConfigured]
+  );
   const artworkLoading = useMemo(
     () => getArtworkStatus.isLoading || getArtworkStatus.isFetching,
     [getArtworkStatus.isFetching, getArtworkStatus.isLoading]
   );
-
   const groupingLoading = useMemo(
     () => getGroupingStatus.isLoading || getGroupingStatus.isFetching,
     [getGroupingStatus.isFetching, getGroupingStatus.isLoading]
