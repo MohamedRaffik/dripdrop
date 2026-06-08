@@ -120,10 +120,18 @@ async def test_create_job_with_file(
     assert music_job.grouping == "grouping"
 
 
-async def test_create_job_with_upload_to_webdav(
-    client, create_and_login_user, test_video_url
+async def test_create_job_defaults_upload_to_webdav_when_configured(
+    client, create_and_login_user, create_webdav, test_video_url, monkeypatch
 ):
-    await create_and_login_user()
+    user = await create_and_login_user()
+    await create_webdav(email=user.email)
+    captured = {}
+
+    def mock_delay(*args, **kwargs):
+        captured.update(kwargs)
+
+    monkeypatch.setattr("app.routes.music.jobs.run_music_job.delay", mock_delay)
+
     response = await client.post(
         URL,
         data={
@@ -132,10 +140,37 @@ async def test_create_job_with_upload_to_webdav(
             "album": "album",
             "grouping": "grouping",
             "video_url": test_video_url,
-            "upload_to_webdav": "true",
         },
     )
     assert response.status_code == status.HTTP_201_CREATED
+    assert captured["upload_to_webdav"] is True
+
+
+async def test_create_job_can_disable_upload_to_webdav(
+    client, create_and_login_user, create_webdav, test_video_url, monkeypatch
+):
+    user = await create_and_login_user()
+    await create_webdav(email=user.email)
+    captured = {}
+
+    def mock_delay(*args, **kwargs):
+        captured.update(kwargs)
+
+    monkeypatch.setattr("app.routes.music.jobs.run_music_job.delay", mock_delay)
+
+    response = await client.post(
+        URL,
+        data={
+            "title": "title",
+            "artist": "artist",
+            "album": "album",
+            "grouping": "grouping",
+            "video_url": test_video_url,
+            "upload_to_webdav": "false",
+        },
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    assert captured["upload_to_webdav"] is False
 
 
 async def test_create_job_with_video_url(
