@@ -47,10 +47,18 @@ jobs:
           echo "TEST_REDIS_URL=redis://redis:6379" >> .env
       - name: Run tests
         run: docker compose --profile prod --env-file .env run --rm server test
+  client-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Install Client Dependencies and build
+        run: npm install --production=false && npm run build
+        working-directory: client
   deploy:
     if: ${{ github.ref_name == 'main' }}
     runs-on: ubuntu-latest
-    needs: [lint, test]
+    needs: [lint, test, client-build]
     permissions:
       contents: read
       packages: write
