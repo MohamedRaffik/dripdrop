@@ -44,8 +44,8 @@ class User(Base):
     webdav: Mapped["WebDav"] = relationship(
         "WebDav", back_populates="user", uselist=False
     )
-    ytdlp_cookies: Mapped["YtdlpCookies"] = relationship(
-        "YtdlpCookies", back_populates="user", uselist=False
+    cookies: Mapped["Cookies"] = relationship(
+        "Cookies", back_populates="user", uselist=False
     )
 
     def set_password(self, new_password: str):
@@ -103,28 +103,28 @@ def load_webdav(target: WebDav, context):
     target.password = WebDav.decrypt_value(target.password)
 
 
-class YtdlpCookies(EncryptedCredentialsMixin, Base):
-    __tablename__ = "ytdlp_cookies"
+class Cookies(EncryptedCredentialsMixin, Base):
+    __tablename__ = "cookies"
 
     email: Mapped[str] = mapped_column(
         ForeignKey(
             User.email,
             onupdate="CASCADE",
             ondelete="CASCADE",
-            name="ytdlp_cookies_email_fkey",
+            name="cookies_email_fkey",
         ),
         primary_key=True,
     )
     cookies: Mapped[str] = mapped_column(nullable=False)
-    user: Mapped[User] = relationship(User, back_populates="ytdlp_cookies")
+    user: Mapped[User] = relationship(User, back_populates="cookies")
 
 
-@event.listens_for(YtdlpCookies, "init")
-def init_ytdlp_cookies(target: YtdlpCookies, args, kwargs):
+@event.listens_for(Cookies, "init")
+def init_cookies(target: Cookies, args, kwargs):
     if "cookies" in kwargs:
-        kwargs["cookies"] = YtdlpCookies.encrypt_value(kwargs["cookies"])
+        kwargs["cookies"] = Cookies.encrypt_value(kwargs["cookies"])
 
 
-@event.listens_for(YtdlpCookies, "load")
-def load_ytdlp_cookies(target: YtdlpCookies, context):
-    target.cookies = YtdlpCookies.decrypt_value(target.cookies)
+@event.listens_for(Cookies, "load")
+def load_cookies(target: Cookies, context):
+    target.cookies = Cookies.decrypt_value(target.cookies)

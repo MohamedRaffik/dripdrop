@@ -5,17 +5,13 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 
 import { useCheckSessionQuery, useLogoutMutation } from "../../api/auth";
+import { useCookiesQuery, useUpdateCookiesMutation, useDeleteCookiesMutation } from "../../api/cookies";
 import { useWebdavQuery, useUpdateWebdavMutation, useDeleteWebdavMutation } from "../../api/webdav";
-import {
-  useYtdlpCookiesQuery,
-  useUpdateYtdlpCookiesMutation,
-  useDeleteYtdlpCookiesMutation,
-} from "../../api/ytdlpCookies";
 
 const AccountTabs = {
   ACCOUNT: "account",
   WEBDAV: "webdav",
-  YTDLP_COOKIES: "ytdlp-cookies",
+  COOKIES: "cookies",
   LEGAL: "legal",
 } as const;
 
@@ -25,14 +21,14 @@ const Account = () => {
   const webdavStatus = useWebdavQuery();
   const [updateWebDav, updateWebDavStatus] = useUpdateWebdavMutation();
   const [deleteWebDav, deleteWebDavStatus] = useDeleteWebdavMutation();
-  const ytdlpCookiesStatus = useYtdlpCookiesQuery();
-  const [updateYtdlpCookies, updateYtdlpCookiesStatus] = useUpdateYtdlpCookiesMutation();
-  const [deleteYtdlpCookies, deleteYtdlpCookiesStatus] = useDeleteYtdlpCookiesMutation();
+  const cookiesStatus = useCookiesQuery();
+  const [updateCookies, updateCookiesStatus] = useUpdateCookiesMutation();
+  const [deleteCookies, deleteCookiesStatus] = useDeleteCookiesMutation();
 
   const [webdavInfo, setWebdavInfo] = useState({ username: "", password: "", url: "" });
   const [cookies, setCookies] = useState("");
   const [webdavDeleteOpened, webdavDeleteHandlers] = useDisclosure(false);
-  const [ytdlpCookiesDeleteOpened, ytdlpCookiesDeleteHandlers] = useDisclosure(false);
+  const [cookiesDeleteOpened, cookiesDeleteHandlers] = useDisclosure(false);
 
   const user = useMemo(() => {
     if (sessionStatus.isSuccess && sessionStatus.currentData) {
@@ -50,12 +46,12 @@ const Account = () => {
   }, [webdavStatus.currentData, webdavStatus.isSuccess]);
 
   useEffect(() => {
-    if (ytdlpCookiesStatus.isSuccess && ytdlpCookiesStatus.currentData) {
-      setCookies(ytdlpCookiesStatus.currentData.cookies);
+    if (cookiesStatus.isSuccess && cookiesStatus.currentData) {
+      setCookies(cookiesStatus.currentData.cookies);
     } else {
       setCookies("");
     }
-  }, [ytdlpCookiesStatus.currentData, ytdlpCookiesStatus.isSuccess]);
+  }, [cookiesStatus.currentData, cookiesStatus.isSuccess]);
 
   if (user) {
     return (
@@ -67,7 +63,7 @@ const Account = () => {
           <Tabs.List>
             <Tabs.Tab value={AccountTabs.ACCOUNT}>Account</Tabs.Tab>
             <Tabs.Tab value={AccountTabs.WEBDAV}>WebDAV</Tabs.Tab>
-            <Tabs.Tab value={AccountTabs.YTDLP_COOKIES}>yt-dlp Cookies</Tabs.Tab>
+            <Tabs.Tab value={AccountTabs.COOKIES}>Cookies</Tabs.Tab>
             <Tabs.Tab value={AccountTabs.LEGAL}>Legal</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value={AccountTabs.ACCOUNT}>
@@ -124,7 +120,7 @@ const Account = () => {
               </Stack>
             </Modal>
           </Tabs.Panel>
-          <Tabs.Panel value={AccountTabs.YTDLP_COOKIES}>
+          <Tabs.Panel value={AccountTabs.COOKIES}>
             <Stack p="md">
               <Textarea
                 label="Cookies"
@@ -136,41 +132,29 @@ const Account = () => {
                 withAsterisk
                 styles={{ input: { fontFamily: "monospace" } }}
               />
-              {updateYtdlpCookiesStatus.isError && (
-                <p style={{ color: "red" }}>{String(updateYtdlpCookiesStatus.error)}</p>
+              {updateCookiesStatus.isError && (
+                <p style={{ color: "red" }}>{String(updateCookiesStatus.error)}</p>
               )}
-              {updateYtdlpCookiesStatus.isSuccess && <p style={{ color: "green" }}>Cookies Updated</p>}
+              {updateCookiesStatus.isSuccess && <p style={{ color: "green" }}>Cookies Updated</p>}
               <Group justify="flex-end" grow>
-                <Button
-                  color="red"
-                  onClick={ytdlpCookiesDeleteHandlers.open}
-                  loading={deleteYtdlpCookiesStatus.isLoading}
-                >
+                <Button color="red" onClick={cookiesDeleteHandlers.open} loading={deleteCookiesStatus.isLoading}>
                   Delete
                 </Button>
-                <Button
-                  onClick={() => updateYtdlpCookies({ cookies })}
-                  loading={updateYtdlpCookiesStatus.isLoading}
-                >
+                <Button onClick={() => updateCookies({ cookies })} loading={updateCookiesStatus.isLoading}>
                   Save
                 </Button>
               </Group>
             </Stack>
-            <Modal
-              opened={ytdlpCookiesDeleteOpened}
-              onClose={ytdlpCookiesDeleteHandlers.close}
-              title="Confirm Delete"
-              centered
-            >
+            <Modal opened={cookiesDeleteOpened} onClose={cookiesDeleteHandlers.close} title="Confirm Delete" centered>
               <Stack p="md">
-                <p>Are you sure you want to delete your yt-dlp cookies?</p>
+                <p>Are you sure you want to delete your cookies?</p>
                 <Group justify="flex-end" grow>
-                  <Button color="red" onClick={ytdlpCookiesDeleteHandlers.close}>
+                  <Button color="red" onClick={cookiesDeleteHandlers.close}>
                     Cancel
                   </Button>
                   <Button
-                    onClick={() => deleteYtdlpCookies().then(ytdlpCookiesDeleteHandlers.close)}
-                    loading={deleteYtdlpCookiesStatus.isLoading}
+                    onClick={() => deleteCookies().then(cookiesDeleteHandlers.close)}
+                    loading={deleteCookiesStatus.isLoading}
                   >
                     Delete
                   </Button>

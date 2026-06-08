@@ -14,7 +14,7 @@ export const Tags = {
   YOUTUBE_QUEUE_VIDEOS: "YoutubeQueueVideos",
   USER: "User",
   WEBDAV: "WebDav",
-  YTDLP_COOKIES: "YtdlpCookies",
+  COOKIES: "Cookies",
 };
 
 export const tags = [
@@ -33,5 +33,5 @@ export const tags = [
   Tags.YOUTUBE_QUEUE_VIDEOS,
   Tags.USER,
   Tags.WEBDAV,
-  Tags.YTDLP_COOKIES,
+  Tags.COOKIES,
 ];

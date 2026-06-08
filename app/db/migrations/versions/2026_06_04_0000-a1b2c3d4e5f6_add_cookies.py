@@ -1,4 +1,4 @@
-"""add ytdlp cookies
+"""add cookies
 
 Revision ID: a1b2c3d4e5f6
 Revises: 1ade30013c25
@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     op.create_table(
-        "ytdlp_cookies",
+        "cookies",
         sa.Column("email", sa.String(), nullable=False),
         sa.Column("cookies", sa.String(), nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False),
@@ -26,7 +26,7 @@ def upgrade():
         sa.ForeignKeyConstraint(
             ["email"],
             ["users.email"],
-            name="ytdlp_cookies_email_fkey",
+            name="cookies_email_fkey",
             onupdate="CASCADE",
             ondelete="CASCADE",
         ),
@@ -35,4 +35,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table("ytdlp_cookies")
+    op.drop_table("cookies")

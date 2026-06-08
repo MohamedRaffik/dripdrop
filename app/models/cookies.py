@@ -3,9 +3,9 @@ from pydantic import BaseModel
 from app.models import Response
 
 
-class YtdlpCookiesResponse(Response):
+class CookiesResponse(Response):
     cookies: str
 
 
-class UpdateYtdlpCookies(BaseModel):
+class UpdateCookies(BaseModel):
     cookies: str

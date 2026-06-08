@@ -18,8 +18,8 @@ const config = {
     "./src/api/generated/webdavApi.ts": {
       filterEndpoints: [/webdav/i],
     },
-    "./src/api/generated/ytdlpCookiesApi.ts": {
-      filterEndpoints: [/ytdlp/i],
+    "./src/api/generated/cookiesApi.ts": {
+      filterEndpoints: [/cookies/i],
     },
   },
   exportName: "api",

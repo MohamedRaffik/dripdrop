@@ -5,7 +5,7 @@ from app.routes.admin import router as admin_router
 from app.routes.authentication import router as auth_router
 from app.routes.music import router as music_router
 from app.routes.webdav import router as webdav_router
-from app.routes.ytdlp_cookies import router as ytdlp_cookies_router
+from app.routes.cookies import router as cookies_router
 from app.routes.youtube import router as youtube_router
 from app.settings import ENV, settings
 
@@ -15,7 +15,7 @@ api_router.include_router(music_router)
 api_router.include_router(youtube_router)
 api_router.include_router(admin_router)
 api_router.include_router(webdav_router)
-api_router.include_router(ytdlp_cookies_router)
+api_router.include_router(cookies_router)
 
 
 app = FastAPI(title="dripdrop", docs_url="/api/docs", openapi_url="/api/openapi.json")

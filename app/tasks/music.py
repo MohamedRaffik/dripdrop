@@ -7,7 +7,7 @@ import aiofiles.os
 from sqlalchemy import select
 from yt_dlp.utils import sanitize_filename
 
-from app.db import MusicJob, WebDav, YtdlpCookies
+from app.db import Cookies, MusicJob, WebDav
 from app.models.music import MusicJobUpdateResponse
 from app.services import (
     audiotags,
@@ -114,13 +114,13 @@ async def run_music_job(self: QueueTask, music_job_id: str):
             MusicJobUpdateResponse(id=music_job_id, status="STARTED").model_dump_json()
         )
 
-        query = select(YtdlpCookies).where(YtdlpCookies.email == music_job.user_email)
-        ytdlp_cookies = await db_session.scalar(query)
+        query = select(Cookies).where(Cookies.email == music_job.user_email)
+        stored_cookies = await db_session.scalar(query)
 
         if not (
             filename := await retrieve_audio_file(
                 music_job=music_job,
-                cookies=ytdlp_cookies.cookies if ytdlp_cookies else None,
+                cookies=stored_cookies.cookies if stored_cookies else None,
             )
         ):
             raise Exception("File not found")
