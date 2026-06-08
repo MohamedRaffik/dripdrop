@@ -307,7 +307,9 @@ async def test_run_music_job_with_webdav_upload(
     expected_album = music_job.album
     expected_grouping = music_job.grouping
 
-    await run_music_job(music_job_id=str(music_job.id))
+    await run_music_job(
+        music_job_id=str(music_job.id), upload_to_webdav=True
+    )
 
     await db_session.refresh(music_job)
 
@@ -333,3 +335,40 @@ async def test_run_music_job_with_webdav_upload(
             f"{webdav.url}/{new_filename}",
             auth=(settings.test_webdav_username, settings.test_webdav_password),
         )
+
+
+@pytest.mark.long
+async def test_run_music_job_skips_webdav_when_disabled(
+    create_user,
+    create_music_job,
+    create_webdav,
+    db_session,
+    test_audio_url,
+):
+    user: User = await create_user()
+    webdav: WebDav = await create_webdav(
+        email=user.email,
+        url=settings.test_webdav_url,
+        username=settings.test_webdav_username,
+        password=settings.test_webdav_password,
+    )
+    music_job: MusicJob = await create_music_job(
+        email=user.email, video_url=test_audio_url
+    )
+
+    await run_music_job(
+        music_job_id=str(music_job.id), upload_to_webdav=False
+    )
+
+    await db_session.refresh(music_job)
+
+    assert music_job.completed is not None
+
+    async with AsyncClient() as client:
+        new_filename = music_job.download_filename.split("/")[-1]
+        response = await client.request(
+            "PROPFIND",
+            f"{webdav.url}/{new_filename}",
+            auth=(settings.test_webdav_username, settings.test_webdav_password),
+        )
+        assert response.status_code == 404

@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING
 
 import bcrypt
-from cryptography.fernet import Fernet
 from sqlalchemy import ForeignKey, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-from app.settings import settings
+from app.db.models.encrypted import EncryptedCredentialsMixin
 
 if TYPE_CHECKING:
     from app.db.models.music import MusicJob
@@ -17,8 +16,6 @@ if TYPE_CHECKING:
         YoutubeVideoQueue,
         YoutubeVideoWatch,
     )
-
-fernet = Fernet(bytes(settings.fernet_key, encoding="utf-8"))
 
 
 class User(Base):
@@ -47,6 +44,9 @@ class User(Base):
     webdav: Mapped["WebDav"] = relationship(
         "WebDav", back_populates="user", uselist=False
     )
+    cookies: Mapped["Cookies"] = relationship(
+        "Cookies", back_populates="user", uselist=False
+    )
 
     def set_password(self, new_password: str):
         self.password = self.hash_password(new_password)
@@ -71,7 +71,7 @@ def init_user(target: User, args, kwargs):
         kwargs["password"] = target.hash_password(kwargs["password"])
 
 
-class WebDav(Base):
+class WebDav(EncryptedCredentialsMixin, Base):
     __tablename__ = "webdav"
 
     email: Mapped[str] = mapped_column(
@@ -88,14 +88,6 @@ class WebDav(Base):
     url: Mapped[str] = mapped_column(nullable=False)
     user: Mapped[User] = relationship(User, back_populates="webdav")
 
-    @classmethod
-    def encrypt_value(cls, value: str):
-        return str(fernet.encrypt(bytes(value, encoding="utf-8")), encoding="utf-8")
-
-    @classmethod
-    def decrypt_value(cls, value: str):
-        return str(fernet.decrypt(value), encoding="utf-8")
-
 
 @event.listens_for(WebDav, "init")
 def init_webdav(target: WebDav, args, kwargs):
@@ -109,3 +101,30 @@ def init_webdav(target: WebDav, args, kwargs):
 def load_webdav(target: WebDav, context):
     target.username = WebDav.decrypt_value(target.username)
     target.password = WebDav.decrypt_value(target.password)
+
+
+class Cookies(EncryptedCredentialsMixin, Base):
+    __tablename__ = "cookies"
+
+    email: Mapped[str] = mapped_column(
+        ForeignKey(
+            User.email,
+            onupdate="CASCADE",
+            ondelete="CASCADE",
+            name="cookies_email_fkey",
+        ),
+        primary_key=True,
+    )
+    cookies: Mapped[str] = mapped_column(nullable=False)
+    user: Mapped[User] = relationship(User, back_populates="cookies")
+
+
+@event.listens_for(Cookies, "init")
+def init_cookies(target: Cookies, args, kwargs):
+    if "cookies" in kwargs:
+        kwargs["cookies"] = Cookies.encrypt_value(kwargs["cookies"])
+
+
+@event.listens_for(Cookies, "load")
+def load_cookies(target: Cookies, context):
+    target.cookies = Cookies.decrypt_value(target.cookies)

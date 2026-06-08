@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { useLazyArtworkQuery, useCreateJobMutation, useLazyMetadataQuery, useTagsMutation } from "../../api/music";
+import { useWebdavQuery } from "../../api/webdav";
 import { isBase64, isValidImage, resolveAlbumFromTitle } from "../../utils/helpers";
 import { CreateMusicJob } from "../../api/generated/musicApi";
 
@@ -31,10 +32,12 @@ const MusicForm = () => {
   const [debouncedVideoUrl] = useDebouncedValue(watchFields.videoUrl, 500);
 
   const [createMusicJob, createJobStatus] = useCreateJobMutation();
+  const webdavStatus = useWebdavQuery();
   const [getArtwork, getArtworkStatus] = useLazyArtworkQuery();
   const [getTags, getTagsStatus] = useTagsMutation();
   const [getMetadata, getMetadataStatus] = useLazyMetadataQuery();
 
+  const hasWebdav = useMemo(() => webdavStatus.isSuccess, [webdavStatus.isSuccess]);
   const artworkLoading = useMemo(
     () => getArtworkStatus.isLoading || getArtworkStatus.isFetching,
     [getArtworkStatus.isFetching, getArtworkStatus.isLoading]
@@ -81,6 +84,9 @@ const MusicForm = () => {
       if (data.grouping) {
         formData.append("grouping", data.grouping);
       }
+      if (hasWebdav) {
+        formData.append("upload_to_webdav", String(data.uploadToWebdav));
+      }
       const status = await createMusicJob(formData as unknown as CreateMusicJob);
       if (!status.error) {
         reset({
@@ -93,7 +99,7 @@ const MusicForm = () => {
         errorNotification();
       }
     },
-    [createMusicJob, reset]
+    [createMusicJob, hasWebdav, reset]
   );
 
   const resolveArtworkUrl = useCallback(
@@ -356,6 +362,20 @@ const MusicForm = () => {
                 )}
               />
             </Flex>
+            {hasWebdav && (
+              <Controller
+                name="uploadToWebdav"
+                control={control}
+                defaultValue={true}
+                render={({ field }) => (
+                  <Switch
+                    label="Upload to WebDAV"
+                    checked={field.value}
+                    onChange={(event) => field.onChange(event.currentTarget.checked)}
+                  />
+                )}
+              />
+            )}
             <Flex justify="center">
               <Button
                 disabled={artworkLoading || getTagsStatus.isLoading || metadataLoading}

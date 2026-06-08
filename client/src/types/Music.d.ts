@@ -9,6 +9,7 @@ type MusicFormState =
       artist?: string;
       album?: string;
       grouping?: string;
+      uploadToWebdav: boolean;
     }
   | {
       isFile: false;
@@ -20,4 +21,5 @@ type MusicFormState =
       artist?: string;
       album?: string;
       grouping?: string;
+      uploadToWebdav: boolean;
     };

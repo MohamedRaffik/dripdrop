@@ -93,6 +93,7 @@ export type CreateMusicJob = {
   artist?: string | null;
   album?: string | null;
   grouping?: string | null;
+  upload_to_webdav?: boolean;
 };
 export type MusicJobResponse = {
   id: string;

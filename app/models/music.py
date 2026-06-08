@@ -41,6 +41,7 @@ class CreateMusicJob(BaseModel):
     artist: Optional[str] = None
     album: Optional[str] = None
     grouping: Optional[str] = None
+    upload_to_webdav: Optional[bool] = None
 
     @field_validator("title", "artist", "album", "grouping", mode="before")
     @classmethod
