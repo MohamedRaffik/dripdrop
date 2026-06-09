@@ -89,12 +89,7 @@ class WebDav(EncryptedCredentialsMixin, Base):
     user: Mapped[User] = relationship(User, back_populates="webdav")
 
 
-@event.listens_for(WebDav, "init")
-def init_webdav(target: WebDav, args, kwargs):
-    if "username" in kwargs:
-        kwargs["username"] = WebDav.encrypt_value(kwargs["username"])
-    if "password" in kwargs:
-        kwargs["password"] = WebDav.encrypt_value(kwargs["password"])
+WebDav.register_encrypted_fields("username", "password")
 
 
 @event.listens_for(WebDav, "load")
@@ -119,10 +114,7 @@ class Cookies(EncryptedCredentialsMixin, Base):
     user: Mapped[User] = relationship(User, back_populates="cookies")
 
 
-@event.listens_for(Cookies, "init")
-def init_cookies(target: Cookies, args, kwargs):
-    if "cookies" in kwargs:
-        kwargs["cookies"] = Cookies.encrypt_value(kwargs["cookies"])
+Cookies.register_encrypted_fields("cookies")
 
 
 @event.listens_for(Cookies, "load")
