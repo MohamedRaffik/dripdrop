@@ -104,8 +104,8 @@ class Cookies(EncryptedCredentialsMixin, Base):
         ),
         primary_key=True,
     )
-    cookies: Mapped[str] = mapped_column(nullable=False)
+    content: Mapped[str] = mapped_column(nullable=False)
     user: Mapped[User] = relationship(User, back_populates="cookies")
 
 
-Cookies.register_encrypted_fields("cookies")
+Cookies.register_encrypted_fields("content")

@@ -4,8 +4,8 @@ from app.models import Response
 
 
 class CookiesResponse(Response):
-    cookies: str
+    content: str
 
 
 class UpdateCookies(BaseModel):
-    cookies: str
+    content: str

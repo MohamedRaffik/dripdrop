@@ -47,7 +47,7 @@ const Account = () => {
 
   useEffect(() => {
     if (cookiesStatus.isSuccess && cookiesStatus.currentData) {
-      setCookies(cookiesStatus.currentData.cookies);
+      setCookies(cookiesStatus.currentData.content);
     } else {
       setCookies("");
     }
@@ -140,7 +140,7 @@ const Account = () => {
                 <Button color="red" onClick={cookiesDeleteHandlers.open} loading={deleteCookiesStatus.isLoading}>
                   Delete
                 </Button>
-                <Button onClick={() => updateCookies({ cookies })} loading={updateCookiesStatus.isLoading}>
+                <Button onClick={() => updateCookies({ content: cookies })} loading={updateCookiesStatus.isLoading}>
                   Save
                 </Button>
               </Group>
