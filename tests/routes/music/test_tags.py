@@ -44,7 +44,7 @@ async def test_tags_with_a_mp3_without_tags(client, create_and_login_user):
 
     await create_and_login_user()
     async with httpclient.AsyncClient() as http_client:
-        response = await http_client.get(s3.resolve_url("/assets/sample4.mp3"))
+        response = await http_client.get(s3.resolve_url("assets/sample4.mp3"))
         assert response.status_code == status.HTTP_200_OK
         file = response.content
     response = await client.post(URL, files={"file": file})
