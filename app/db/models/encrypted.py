@@ -22,3 +22,8 @@ class EncryptedCredentialsMixin:
         def encrypt_before_persist(mapper, connection, target):
             for field in fields:
                 setattr(target, field, cls.encrypt_value(getattr(target, field)))
+
+        @event.listens_for(cls, "load")
+        def decrypt_on_load(target, context):
+            for field in fields:
+                setattr(target, field, cls.decrypt_value(getattr(target, field)))

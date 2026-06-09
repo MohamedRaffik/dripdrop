@@ -92,12 +92,6 @@ class WebDav(EncryptedCredentialsMixin, Base):
 WebDav.register_encrypted_fields("username", "password")
 
 
-@event.listens_for(WebDav, "load")
-def load_webdav(target: WebDav, context):
-    target.username = WebDav.decrypt_value(target.username)
-    target.password = WebDav.decrypt_value(target.password)
-
-
 class Cookies(EncryptedCredentialsMixin, Base):
     __tablename__ = "cookies"
 
@@ -115,8 +109,3 @@ class Cookies(EncryptedCredentialsMixin, Base):
 
 
 Cookies.register_encrypted_fields("cookies")
-
-
-@event.listens_for(Cookies, "load")
-def load_cookies(target: Cookies, context):
-    target.cookies = Cookies.decrypt_value(target.cookies)
