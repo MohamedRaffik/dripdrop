@@ -36,10 +36,10 @@ async def update_cookies(
 ):
     query = select(Cookies).where(Cookies.email == user.email)
     if cookies := await db_session.scalar(query):
-        cookies.cookies = body.cookies
+        cookies.content = body.content
         await db_session.commit()
     else:
-        cookies = Cookies(email=user.email, cookies=body.cookies)
+        cookies = Cookies(email=user.email, content=body.content)
         db_session.add(cookies)
         await db_session.commit()
     return CookiesResponse.model_validate(body)

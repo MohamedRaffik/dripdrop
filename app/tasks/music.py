@@ -120,7 +120,7 @@ async def run_music_job(
         if not (
             filename := await retrieve_audio_file(
                 music_job=music_job,
-                cookies=stored_cookies.cookies if stored_cookies else None,
+                cookies=stored_cookies.content if stored_cookies else None,
             )
         ):
             raise Exception("File not found")

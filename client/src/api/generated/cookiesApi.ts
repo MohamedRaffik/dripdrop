@@ -28,7 +28,7 @@ export type UpdateCookiesApiCookiesPostApiArg = UpdateCookies;
 export type DeleteCookiesApiCookiesDeleteApiResponse = unknown;
 export type DeleteCookiesApiCookiesDeleteApiArg = void;
 export type CookiesResponse = {
-  cookies: string;
+  content: string;
 };
 export type ValidationError = {
   loc: (string | number)[];
@@ -39,7 +39,7 @@ export type HttpValidationError = {
   detail?: ValidationError[];
 };
 export type UpdateCookies = {
-  cookies: string;
+  content: string;
 };
 export const {
   useGetCookiesApiCookiesGetQuery,

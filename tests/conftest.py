@@ -324,7 +324,7 @@ async def create_cookies(db_session: AsyncSession, faker: Faker):
     async def _run(email: str, cookies: str = None):
         stored_cookies = Cookies(
             email=email,
-            cookies=cookies or faker.text(),
+            content=cookies or faker.text(),
         )
         db_session.add(stored_cookies)
         await db_session.commit()

@@ -41,4 +41,4 @@ async def test_get_cookies(
     response = await client.get(URL)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["cookies"] == Cookies.decrypt_value(stored_cookies.cookies)
+    assert data["content"] == Cookies.decrypt_value(stored_cookies.content)

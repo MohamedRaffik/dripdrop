@@ -14,7 +14,7 @@ async def test_update_cookies_when_not_logged_in(client: AsyncClient, faker: Fak
     Test updating cookies when not logged in. The
     endpoint should return a 401 status.
     """
-    response = await client.post(URL, json={"cookies": faker.text()})
+    response = await client.post(URL, json={"content": faker.text()})
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -29,7 +29,7 @@ async def test_update_cookies_creating(
     endpoint should create a new configuration and return a 200 status.
     """
     user: User = await create_and_login_user()
-    new_data = {"cookies": faker.text()}
+    new_data = {"content": faker.text()}
 
     response = await client.post(URL, json=new_data)
     assert response.status_code == status.HTTP_200_OK
@@ -38,7 +38,7 @@ async def test_update_cookies_creating(
     query = select(Cookies).where(Cookies.email == user.email)
     stored_cookies = await db_session.scalar(query)
     assert stored_cookies is not None
-    assert stored_cookies.cookies == new_data["cookies"]
+    assert stored_cookies.content == new_data["content"]
 
 
 async def test_update_cookies_with_existing(
@@ -56,10 +56,10 @@ async def test_update_cookies_with_existing(
 
     stored_cookies = await create_cookies(email=user.email)
 
-    updated_data = {"cookies": faker.text()}
+    updated_data = {"content": faker.text()}
     response = await client.post(URL, json=updated_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == updated_data
 
     await db_session.refresh(stored_cookies)
-    assert stored_cookies.cookies == updated_data["cookies"]
+    assert stored_cookies.content == updated_data["content"]
