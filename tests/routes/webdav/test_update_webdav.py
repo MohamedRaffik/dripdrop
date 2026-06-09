@@ -111,6 +111,6 @@ async def test_update_webdav_with_existing(
 
     # Verify in DB
     await db_session.refresh(webdav)
-    assert webdav.username == updated_data["username"]
-    assert webdav.password == updated_data["password"]
+    assert WebDav.decrypt_value(webdav.username) == updated_data["username"]
+    assert WebDav.decrypt_value(webdav.password) == updated_data["password"]
     assert webdav.url == updated_data["url"]
