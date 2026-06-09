@@ -62,4 +62,4 @@ async def test_update_cookies_with_existing(
     assert response.json() == updated_data
 
     await db_session.refresh(stored_cookies)
-    assert stored_cookies.cookies == updated_data["cookies"]
+    assert Cookies.decrypt_value(stored_cookies.cookies) == updated_data["cookies"]
