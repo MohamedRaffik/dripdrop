@@ -17,7 +17,7 @@ import { showNotification } from "@mantine/notifications";
 import { useCallback, useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
-import { useLazyArtworkQuery, useCreateJobMutation, useLazyGroupingQuery, useTagsMutation } from "../../api/music";
+import { useLazyArtworkQuery, useCreateJobMutation, useLazyMetadataQuery, useTagsMutation } from "../../api/music";
 import { useWebdavQuery } from "../../api/webdav";
 import { isBase64, isValidImage, resolveAlbumFromTitle } from "../../utils/helpers";
 import { CreateMusicJob } from "../../api/generated/musicApi";
@@ -35,16 +35,17 @@ const MusicForm = () => {
   const webdavStatus = useWebdavQuery();
   const [getArtwork, getArtworkStatus] = useLazyArtworkQuery();
   const [getTags, getTagsStatus] = useTagsMutation();
-  const [getGrouping, getGroupingStatus] = useLazyGroupingQuery();
+  const [getMetadata, getMetadataStatus] = useLazyMetadataQuery();
 
   const hasWebdav = useMemo(() => webdavStatus.isSuccess, [webdavStatus.isSuccess]);
   const artworkLoading = useMemo(
     () => getArtworkStatus.isLoading || getArtworkStatus.isFetching,
     [getArtworkStatus.isFetching, getArtworkStatus.isLoading]
   );
-  const groupingLoading = useMemo(
-    () => getGroupingStatus.isLoading || getGroupingStatus.isFetching,
-    [getGroupingStatus.isFetching, getGroupingStatus.isLoading]
+
+  const metadataLoading = useMemo(
+    () => getMetadataStatus.isLoading || getMetadataStatus.isFetching,
+    [getMetadataStatus.isFetching, getMetadataStatus.isLoading]
   );
 
   const onSubmit = useCallback(
@@ -150,29 +151,42 @@ const MusicForm = () => {
   }, [getFileTags, watchFields.file]);
 
   useEffect(() => {
-    if (watchFields.title) {
+    if (watchFields.title && !watchFields.album) {
       setValue("album", resolveAlbumFromTitle(watchFields.title));
     }
-  }, [setValue, watchFields.title]);
+  }, [setValue, watchFields.album, watchFields.title]);
 
-  const resolveGrouping = useCallback(
+  const resolveVideoMetadata = useCallback(
     async (videoUrl: string) => {
       if (videoUrl) {
         if (URL.canParse(videoUrl)) {
-          const status = await getGrouping(videoUrl);
+          const status = await getMetadata(videoUrl);
           if (status.isSuccess) {
-            const { grouping } = status.data;
-            setValue("grouping", grouping);
+            const { grouping, title, artist, album } = status.data;
+            if (grouping) {
+              setValue("grouping", grouping);
+            }
+            if (title) {
+              setValue("title", title);
+            }
+            if (artist) {
+              setValue("artist", artist);
+            }
+            if (album) {
+              setValue("album", album);
+            } else if (title) {
+              setValue("album", resolveAlbumFromTitle(title));
+            }
           }
         }
       }
     },
-    [getGrouping, setValue]
+    [getMetadata, setValue]
   );
 
   useEffect(() => {
-    resolveGrouping(debouncedVideoUrl || "");
-  }, [debouncedVideoUrl, resolveGrouping]);
+    resolveVideoMetadata(debouncedVideoUrl || "");
+  }, [debouncedVideoUrl, resolveVideoMetadata]);
 
   return (
     <Stack>
@@ -291,8 +305,8 @@ const MusicForm = () => {
                     label="Title"
                     placeholder="Enter Title"
                     withAsterisk
-                    disabled={getTagsStatus.isLoading}
-                    rightSection={getTagsStatus.isLoading ? <Loader size="xs" /> : null}
+                    disabled={getTagsStatus.isLoading || metadataLoading}
+                    rightSection={getTagsStatus.isLoading || metadataLoading ? <Loader size="xs" /> : null}
                   />
                 )}
               />
@@ -309,8 +323,8 @@ const MusicForm = () => {
                     label="Artist"
                     placeholder="Enter Artist"
                     withAsterisk
-                    disabled={getTagsStatus.isLoading}
-                    rightSection={getTagsStatus.isLoading ? <Loader size="xs" /> : null}
+                    disabled={getTagsStatus.isLoading || metadataLoading}
+                    rightSection={getTagsStatus.isLoading || metadataLoading ? <Loader size="xs" /> : null}
                   />
                 )}
               />
@@ -327,8 +341,8 @@ const MusicForm = () => {
                     label="Album"
                     placeholder="Enter Album"
                     withAsterisk
-                    disabled={getTagsStatus.isLoading}
-                    rightSection={getTagsStatus.isLoading ? <Loader size="xs" /> : null}
+                    disabled={getTagsStatus.isLoading || metadataLoading}
+                    rightSection={getTagsStatus.isLoading || metadataLoading ? <Loader size="xs" /> : null}
                   />
                 )}
               />
@@ -342,8 +356,8 @@ const MusicForm = () => {
                     w="100%"
                     label="Grouping"
                     placeholder="Enter Grouping"
-                    disabled={getTagsStatus.isLoading || groupingLoading}
-                    rightSection={getTagsStatus.isLoading || groupingLoading ? <Loader size="xs" /> : null}
+                    disabled={getTagsStatus.isLoading || metadataLoading}
+                    rightSection={getTagsStatus.isLoading || metadataLoading ? <Loader size="xs" /> : null}
                   />
                 )}
               />
@@ -364,7 +378,7 @@ const MusicForm = () => {
             )}
             <Flex justify="center">
               <Button
-                disabled={artworkLoading || getTagsStatus.isLoading || groupingLoading}
+                disabled={artworkLoading || getTagsStatus.isLoading || metadataLoading}
                 loading={createJobStatus.isLoading}
                 type="submit"
               >

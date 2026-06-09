@@ -1,6 +1,6 @@
 export const Tags = {
   MUSIC_JOB: "MusicJob",
-  MUSIC_GROUPING: "MusicGrouping",
+  MUSIC_METADATA: "MusicMetadata",
   MUSIC_ARTWORK: "MusicArtwork",
   MUSIC_TAGS: "MusicTags",
   MUSIC_DOWNLOAD: "MusicDownload",
@@ -20,7 +20,7 @@ export const Tags = {
 export const tags = [
   Tags.MUSIC_ARTWORK,
   Tags.MUSIC_DOWNLOAD,
-  Tags.MUSIC_GROUPING,
+  Tags.MUSIC_METADATA,
   Tags.MUSIC_JOB,
   Tags.MUSIC_TAGS,
   Tags.YOUTUBE_CHANNEL,

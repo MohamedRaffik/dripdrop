@@ -8,7 +8,7 @@ type MusicFormState =
       title: string;
       artist: string;
       album: string;
-      grouping: string;
+      grouping?: string;
       uploadToWebdav: boolean;
     }
   | {
@@ -20,6 +20,6 @@ type MusicFormState =
       title: string;
       artist: string;
       album: string;
-      grouping: string;
+      grouping?: string;
       uploadToWebdav: boolean;
     };

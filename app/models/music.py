@@ -2,13 +2,16 @@ from datetime import datetime
 from typing import Literal, Optional
 
 from fastapi import UploadFile
-from pydantic import BaseModel, ConfigDict, HttpUrl
+from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 
 from app.models import Response
 
 
-class GroupingResponse(Response):
-    grouping: str
+class MetadataResponse(Response):
+    grouping: Optional[str] = None
+    title: Optional[str] = None
+    artist: Optional[str] = None
+    album: Optional[str] = None
 
 
 class ResolvedArtworkResponse(Response):
@@ -39,6 +42,13 @@ class CreateMusicJob(BaseModel):
     album: str
     grouping: Optional[str] = None
     upload_to_webdav: Optional[bool] = None
+
+    @field_validator("grouping", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, value):
+        if value == "":
+            return None
+        return value
 
 
 class MusicJobResponse(Response):

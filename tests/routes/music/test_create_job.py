@@ -122,6 +122,24 @@ async def test_create_job_with_file(
     assert music_job.grouping == "grouping"
 
 
+async def test_create_job_with_video_url_without_metadata(
+    client, create_and_login_user, test_video_url
+):
+    """
+    Test creating a job with a video url and no metadata fields. The endpoint
+    should return a 422 status.
+    """
+
+    await create_and_login_user()
+    response = await client.post(
+        URL,
+        data={
+            "video_url": test_video_url,
+        },
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
 @pytest.mark.parametrize(
     "upload_to_webdav,expected",
     [

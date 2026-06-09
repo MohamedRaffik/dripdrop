@@ -5,10 +5,10 @@ import { buildWebsocketURL } from "../config";
 
 const enhancedApi = api
   .enhanceEndpoints({
-    addTagTypes: [Tags.MUSIC_GROUPING, Tags.MUSIC_ARTWORK, Tags.MUSIC_TAGS, Tags.MUSIC_JOB, Tags.MUSIC_DOWNLOAD],
+    addTagTypes: [Tags.MUSIC_METADATA, Tags.MUSIC_ARTWORK, Tags.MUSIC_TAGS, Tags.MUSIC_JOB, Tags.MUSIC_DOWNLOAD],
     endpoints: {
-      getGroupingApiMusicGroupingGet: {
-        providesTags: [Tags.MUSIC_GROUPING],
+      getMetadataApiMusicMetadataGet: {
+        providesTags: [Tags.MUSIC_METADATA],
       },
       getArtworkApiMusicArtworkGet: {
         providesTags: [Tags.MUSIC_ARTWORK],
@@ -70,7 +70,7 @@ const enhancedApi = api
 export default enhancedApi;
 export const {
   useLazyGetArtworkApiMusicArtworkGetQuery: useLazyArtworkQuery,
-  useLazyGetGroupingApiMusicGroupingGetQuery: useLazyGroupingQuery,
+  useLazyGetMetadataApiMusicMetadataGetQuery: useLazyMetadataQuery,
   useGetTagsApiMusicTagsPostMutation: useTagsMutation,
   useCreateJobApiMusicJobsCreatePostMutation: useCreateJobMutation,
   useGetJobsApiMusicJobsListGetQuery: useMusicJobsQuery,
