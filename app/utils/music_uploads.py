@@ -1,4 +1,5 @@
 import re
+from datetime import timedelta
 
 from fastapi import HTTPException, status
 
@@ -21,6 +22,18 @@ def build_job_audio_key(job_id: str, filename: str) -> str:
 def is_temp_upload_key(upload_key: str) -> bool:
     return bool(
         re.match(rf"^{re.escape(music_temp_folder())}/[^/]+/.+", upload_key)
+    )
+
+
+TEMP_UPLOAD_MAX_AGE_HOURS = 24
+
+
+async def cleanup_temp_uploads(
+    max_age_hours: int = TEMP_UPLOAD_MAX_AGE_HOURS,
+) -> list[str]:
+    return await s3.delete_objects_older_than(
+        prefix=f"{music_temp_folder()}/",
+        max_age=timedelta(hours=max_age_hours),
     )
 
 

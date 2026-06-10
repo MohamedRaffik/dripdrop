@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urljoin, urlparse, urlunparse
 
 import boto3
@@ -103,6 +104,36 @@ async def delete_file(filename: str):
     return await asyncio.to_thread(
         _client.delete_object, Bucket=settings.aws_s3_bucket, Key=filename
     )
+
+
+async def delete_objects_older_than(prefix: str, max_age: timedelta) -> list[str]:
+    cutoff = datetime.now(timezone.utc) - max_age
+
+    def _delete_older():
+        deleted: list[str] = []
+        continuation_token = ""
+        while True:
+            params = {"Bucket": settings.aws_s3_bucket, "Prefix": prefix}
+            if continuation_token:
+                params["ContinuationToken"] = continuation_token
+            response = _client.list_objects_v2(**params)
+            for obj in response.get("Contents", []):
+                last_modified = obj["LastModified"]
+                if last_modified.tzinfo is None:
+                    last_modified = last_modified.replace(tzinfo=timezone.utc)
+                if last_modified < cutoff:
+                    key = obj["Key"]
+                    _client.delete_object(
+                        Bucket=settings.aws_s3_bucket,
+                        Key=key,
+                    )
+                    deleted.append(key)
+            if not response.get("IsTruncated"):
+                break
+            continuation_token = response.get("NextContinuationToken", "")
+        return deleted
+
+    return await asyncio.to_thread(_delete_older)
 
 
 async def list_filenames(prefix: str = ""):
