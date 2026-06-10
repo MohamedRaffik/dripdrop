@@ -36,12 +36,7 @@ class QueueTask(Task):
             return loop.create_task(self.run(*args, **kwargs))
         except RuntimeError:
             loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                return loop.run_until_complete(self.run(*args, **kwargs))
-            finally:
-                loop.close()
-                asyncio.set_event_loop(None)
+            return loop.run_until_complete(self.run(*args, **kwargs))
 
 
 celery = Celery(
