@@ -3,6 +3,8 @@ type MusicFormState =
       isFile: true;
       videoUrl: string;
       file: File;
+      jobId?: string;
+      uploadKey?: string;
       artworkUrl: string;
       resolvedArtworkUrl: string;
       title: string;

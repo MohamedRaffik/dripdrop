@@ -44,6 +44,17 @@ async def generate_presigned_upload_url(
     )
 
 
+async def download_file(filename: str) -> bytes:
+    def _download():
+        response = _client.get_object(
+            Bucket=settings.aws_s3_bucket,
+            Key=filename,
+        )
+        return response["Body"].read()
+
+    return await asyncio.to_thread(_download)
+
+
 async def object_exists(filename: str):
     try:
         await asyncio.to_thread(

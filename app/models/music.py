@@ -22,6 +22,10 @@ class MusicJobUpdateResponse(Response):
     status: Literal["STARTED", "COMPLETED"]
 
 
+class TagsRequest(BaseModel):
+    upload_key: str
+
+
 class TagsResponse(Response):
     title: Optional[str] = None
     artist: Optional[str] = None

@@ -4,7 +4,7 @@ import traceback
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import HttpUrl
 
 from app.dependencies import get_authenticated_user
@@ -13,12 +13,14 @@ from app.models.music import (
     PresignUploadRequest,
     PresignUploadResponse,
     ResolvedArtworkResponse,
+    TagsRequest,
     TagsResponse,
 )
 from app.services import s3
 from app.settings import settings
 from app.routes.music.jobs import router as jobs_router
 from app.services import audiotags, google, imagedownloader, ytdlp
+from app.utils.music_uploads import validate_music_upload_key
 from app.utils.youtube import parse_youtube_video_id
 
 logger = logging.getLogger(__name__)
@@ -96,10 +98,11 @@ async def presign_upload(request: PresignUploadRequest):
 
 
 @router.post("/tags", response_model=TagsResponse)
-async def get_tags(file: UploadFile):
-    tags = await audiotags.AudioTags.read_tags(
-        file=await file.read(), filename=file.filename
-    )
+async def get_tags(request: TagsRequest):
+    await validate_music_upload_key(upload_key=request.upload_key)
+    file_bytes = await s3.download_file(filename=request.upload_key)
+    filename = request.upload_key.rsplit("/", 1)[-1]
+    tags = await audiotags.AudioTags.read_tags(file=file_bytes, filename=filename)
     return TagsResponse(
         title=tags.title,
         artist=tags.artist,

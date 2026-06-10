@@ -23,11 +23,10 @@ from app.models.music import (
     MusicJobListResponse,
     MusicJobUpdateResponse,
 )
-from app.services import s3
 from app.services.pubsub import PubSub
-from app.settings import settings
 from app.tasks.music import run_music_job
 from app.utils.database import query_with_pagination
+from app.utils.music_uploads import validate_music_upload_key
 
 router = APIRouter(
     prefix="/jobs",
@@ -59,15 +58,10 @@ async def create_job(
                 detail="'job_id' is required when 'upload_key' is defined.",
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
-        expected_prefix = f"{settings.aws_s3_music_folder}/{form.job_id}/old/"
-        if not form.upload_key.startswith(expected_prefix):
+        job_id = await validate_music_upload_key(upload_key=form.upload_key)
+        if job_id != form.job_id:
             raise HTTPException(
                 detail="Invalid upload_key.",
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            )
-        if not await s3.object_exists(filename=form.upload_key):
-            raise HTTPException(
-                detail="Uploaded file not found.",
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
     job_kwargs = {

@@ -155,9 +155,10 @@ export type TagsResponse = {
   grouping?: string | null;
   artworkUrl?: string | null;
 };
-export type BodyGetTagsApiMusicTagsPost = {
-  file: Blob;
+export type TagsRequest = {
+  upload_key: string;
 };
+export type BodyGetTagsApiMusicTagsPost = TagsRequest;
 export const {
   useCreateJobApiMusicJobsCreatePostMutation,
   useDeleteJobApiMusicJobsJobIdDeleteDeleteMutation,
