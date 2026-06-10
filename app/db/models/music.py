@@ -2,7 +2,6 @@ import asyncio
 import base64
 import re
 import uuid
-from dataclasses import dataclass
 from datetime import datetime
 
 from sqlalchemy import TIMESTAMP, ForeignKey, select
@@ -12,13 +11,6 @@ from app.db import Base, get_session
 from app.db.models.user import User
 from app.services import audiotags, httpclient, imagedownloader, s3
 from app.settings import settings
-
-
-@dataclass
-class MusicFile:
-    file: bytes
-    filename: str
-    content_type: str
 
 
 class MusicJob(Base):
@@ -63,17 +55,6 @@ class MusicJob(Base):
             await s3.delete_file(filename=self.download_filename)
         if self.original_filename:
             await s3.delete_file(filename=self.original_filename)
-
-    async def _upload_audio_file(self, music_file: MusicFile):
-        filename = f"{settings.aws_s3_music_folder}/{self.id}/old/{music_file.filename}"
-        url = s3.resolve_url(filename=filename)
-        await s3.upload_file(
-            filename=filename,
-            body=music_file.file,
-            content_type=music_file.content_type,
-        )
-        self.original_filename = filename
-        self.filename_url = url
 
     def _set_audio_file_from_key(self, key: str):
         self.original_filename = key
@@ -139,7 +120,6 @@ class MusicJob(Base):
     async def upload_files(
         cls,
         music_job_id: str,
-        music_file: MusicFile | None = None,
         upload_key: str | None = None,
         artwork_url: str | None = None,
     ):
@@ -148,8 +128,6 @@ class MusicJob(Base):
             if music_job := await db_session.scalar(query):
                 if upload_key:
                     music_job._set_audio_file_from_key(key=upload_key)
-                elif music_file:
-                    await music_job._upload_audio_file(music_file=music_file)
                 if artwork_url:
                     await music_job._upload_artwork_url(artwork_url=artwork_url)
                 await db_session.commit()

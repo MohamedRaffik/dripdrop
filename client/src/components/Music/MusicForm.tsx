@@ -95,19 +95,12 @@ const MusicForm = () => {
 
       const formData = new FormData();
       if (data.file) {
-        let jobId = data.isFile ? data.jobId : undefined;
-        let uploadKey = data.isFile ? data.uploadKey : undefined;
-        if (!jobId || !uploadKey) {
-          const upload = await uploadFile(data.file);
-          if (!upload) {
-            errorNotification();
-            return;
-          }
-          jobId = upload.jobId;
-          uploadKey = upload.key;
+        if (!data.isFile || !data.jobId || !data.uploadKey) {
+          errorNotification();
+          return;
         }
-        formData.append("job_id", jobId);
-        formData.append("upload_key", uploadKey);
+        formData.append("job_id", data.jobId);
+        formData.append("upload_key", data.uploadKey);
       } else {
         formData.append("video_url", data.videoUrl);
       }
@@ -135,7 +128,7 @@ const MusicForm = () => {
         errorNotification();
       }
     },
-    [createMusicJob, hasWebdav, reset, uploadFile]
+    [createMusicJob, hasWebdav, reset]
   );
 
   const resolveArtworkUrl = useCallback(
