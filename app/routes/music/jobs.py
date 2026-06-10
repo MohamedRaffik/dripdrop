@@ -1,4 +1,3 @@
-import re
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -16,7 +15,7 @@ from fastapi import (
 )
 from sqlalchemy import select
 
-from app.db import MusicFile, MusicJob
+from app.db import MusicJob
 from app.dependencies import AuthUser, DatabaseSession, get_authenticated_user
 from app.models import Pagination
 from app.models.music import (
@@ -24,7 +23,9 @@ from app.models.music import (
     MusicJobListResponse,
     MusicJobUpdateResponse,
 )
+from app.services import s3
 from app.services.pubsub import PubSub
+from app.settings import settings
 from app.tasks.music import run_music_job
 from app.utils.database import query_with_pagination
 
@@ -42,44 +43,49 @@ async def create_job(
     background_tasks: BackgroundTasks,
     form: Annotated[CreateMusicJob, Form()],
 ):
-    if form.file and form.video_url:
+    if form.upload_key and form.video_url:
         raise HTTPException(
-            detail="'file' and 'video_url' cannot both be defined.",
+            detail="'upload_key' and 'video_url' cannot both be defined.",
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
-    elif form.file is None and form.video_url is None:
+    elif form.upload_key is None and form.video_url is None:
         raise HTTPException(
-            detail="'file' or 'video_url' must be defined.",
+            detail="'upload_key' or 'video_url' must be defined.",
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
-    if form.file:
-        if not re.match("^audio/", form.file.content_type):
+    if form.upload_key:
+        if not form.job_id:
             raise HTTPException(
-                detail="File is incorrect format.",
+                detail="'job_id' is required when 'upload_key' is defined.",
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
-    music_job = MusicJob(
-        user_email=user.email,
-        video_url=form.video_url.unicode_string() if form.video_url else None,
-        title=form.title,
-        artist=form.artist,
-        album=form.album,
-        grouping=form.grouping,
-    )
+        expected_prefix = f"{settings.aws_s3_music_folder}/{form.job_id}/old/"
+        if not form.upload_key.startswith(expected_prefix):
+            raise HTTPException(
+                detail="Invalid upload_key.",
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            )
+        if not await s3.object_exists(filename=form.upload_key):
+            raise HTTPException(
+                detail="Uploaded file not found.",
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            )
+    job_kwargs = {
+        "user_email": user.email,
+        "video_url": form.video_url.unicode_string() if form.video_url else None,
+        "title": form.title,
+        "artist": form.artist,
+        "album": form.album,
+        "grouping": form.grouping,
+    }
+    if form.job_id:
+        job_kwargs["id"] = form.job_id
+    music_job = MusicJob(**job_kwargs)
     session.add(music_job)
     await session.commit()
-    music_file = (
-        MusicFile(
-            file=await form.file.read(),
-            filename=form.file.filename,
-            content_type=form.file.content_type,
-        )
-        if form.file
-        else None
-    )
     await MusicJob.upload_files(
         music_job_id=music_job.id,
-        music_file=music_file,
+        upload_key=form.upload_key,
         artwork_url=form.artwork_url,
     )
     background_tasks.add_task(

@@ -58,6 +58,16 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg,
       }),
     }),
+    presignUploadApiMusicUploadsPresignPost: build.mutation<
+      PresignUploadApiMusicUploadsPresignPostApiResponse,
+      PresignUploadApiMusicUploadsPresignPostApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/music/uploads/presign`,
+        method: "POST",
+        body: queryArg,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -85,8 +95,21 @@ export type ValidationError = {
 export type HttpValidationError = {
   detail?: ValidationError[];
 };
+export type PresignUploadApiMusicUploadsPresignPostApiResponse = PresignUploadResponse;
+export type PresignUploadApiMusicUploadsPresignPostApiArg = PresignUploadRequest;
+export type PresignUploadRequest = {
+  filename: string;
+  content_type: string;
+};
+export type PresignUploadResponse = {
+  jobId: string;
+  uploadUrl: string;
+  key: string;
+  publicUrl: string;
+};
 export type CreateMusicJob = {
-  file?: Blob | null;
+  jobId?: string | null;
+  uploadKey?: string | null;
   video_url?: string | null;
   artwork_url?: string | null;
   title: string;
@@ -145,4 +168,5 @@ export const {
   useGetArtworkApiMusicArtworkGetQuery,
   useLazyGetArtworkApiMusicArtworkGetQuery,
   useGetTagsApiMusicTagsPostMutation,
+  usePresignUploadApiMusicUploadsPresignPostMutation,
 } = injectedRtkApi;

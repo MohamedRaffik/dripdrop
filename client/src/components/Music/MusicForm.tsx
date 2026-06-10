@@ -17,7 +17,13 @@ import { showNotification } from "@mantine/notifications";
 import { useCallback, useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
-import { useLazyArtworkQuery, useCreateJobMutation, useLazyMetadataQuery, useTagsMutation } from "../../api/music";
+import {
+  useLazyArtworkQuery,
+  useCreateJobMutation,
+  useLazyMetadataQuery,
+  usePresignUploadMutation,
+  useTagsMutation,
+} from "../../api/music";
 import { useWebdavQuery } from "../../api/webdav";
 import { isBase64, isValidImage, resolveAlbumFromTitle } from "../../utils/helpers";
 import { CreateMusicJob } from "../../api/generated/musicApi";
@@ -32,6 +38,7 @@ const MusicForm = () => {
   const [debouncedVideoUrl] = useDebouncedValue(watchFields.videoUrl, 500);
 
   const [createMusicJob, createJobStatus] = useCreateJobMutation();
+  const [presignUpload] = usePresignUploadMutation();
   const webdavStatus = useWebdavQuery();
   const [getArtwork, getArtworkStatus] = useLazyArtworkQuery();
   const [getTags, getTagsStatus] = useTagsMutation();
@@ -65,7 +72,26 @@ const MusicForm = () => {
 
       const formData = new FormData();
       if (data.file) {
-        formData.append("file", data.file);
+        const presignStatus = await presignUpload({
+          filename: data.file.name,
+          content_type: data.file.type,
+        });
+        if (presignStatus.error) {
+          errorNotification();
+          return;
+        }
+        const { jobId, uploadUrl, key } = presignStatus.data;
+        const uploadResponse = await fetch(uploadUrl, {
+          method: "PUT",
+          body: data.file,
+          headers: { "Content-Type": data.file.type },
+        });
+        if (!uploadResponse.ok) {
+          errorNotification();
+          return;
+        }
+        formData.append("job_id", jobId);
+        formData.append("upload_key", key);
       } else {
         formData.append("video_url", data.videoUrl);
       }
@@ -93,7 +119,7 @@ const MusicForm = () => {
         errorNotification();
       }
     },
-    [createMusicJob, hasWebdav, reset]
+    [createMusicJob, hasWebdav, presignUpload, reset]
   );
 
   const resolveArtworkUrl = useCallback(

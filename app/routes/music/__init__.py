@@ -1,5 +1,7 @@
 import logging
+import re
 import traceback
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
@@ -8,9 +10,13 @@ from pydantic import HttpUrl
 from app.dependencies import get_authenticated_user
 from app.models.music import (
     MetadataResponse,
+    PresignUploadRequest,
+    PresignUploadResponse,
     ResolvedArtworkResponse,
     TagsResponse,
 )
+from app.services import s3
+from app.settings import settings
 from app.routes.music.jobs import router as jobs_router
 from app.services import audiotags, google, imagedownloader, ytdlp
 from app.utils.youtube import parse_youtube_video_id
@@ -66,6 +72,27 @@ async def get_artwork(artwork_url: Annotated[HttpUrl, Query()]):
         raise HTTPException(
             detail="Unable to get artwork.", status_code=status.HTTP_400_BAD_REQUEST
         )
+
+
+@router.post("/uploads/presign", response_model=PresignUploadResponse)
+async def presign_upload(request: PresignUploadRequest):
+    if not re.match("^audio/", request.content_type):
+        raise HTTPException(
+            detail="File is incorrect format.",
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
+    job_id = str(uuid.uuid4())
+    key = f"{settings.aws_s3_music_folder}/{job_id}/old/{request.filename}"
+    upload_url = await s3.generate_presigned_upload_url(
+        filename=key,
+        content_type=request.content_type,
+    )
+    return PresignUploadResponse(
+        job_id=job_id,
+        upload_url=upload_url,
+        key=key,
+        public_url=s3.resolve_url(filename=key),
+    )
 
 
 @router.post("/tags", response_model=TagsResponse)

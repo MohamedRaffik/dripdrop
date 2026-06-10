@@ -3,6 +3,7 @@ from urllib.parse import urljoin, urlparse, urlunparse
 
 import boto3
 from botocore.config import Config
+from botocore.exceptions import ClientError
 
 from app.settings import settings
 
@@ -22,6 +23,39 @@ def resolve_url(filename: str):
     return urlunparse(
         [url.scheme, netloc, url.path, url.params, url.query, url.fragment]
     )
+
+
+async def generate_presigned_upload_url(
+    filename: str,
+    content_type: str,
+    expires_in: int = 3600,
+    acl: str = "public-read",
+):
+    return await asyncio.to_thread(
+        _client.generate_presigned_url,
+        "put_object",
+        Params={
+            "Bucket": settings.aws_s3_bucket,
+            "Key": filename,
+            "ContentType": content_type,
+            "ACL": acl,
+        },
+        ExpiresIn=expires_in,
+    )
+
+
+async def object_exists(filename: str):
+    try:
+        await asyncio.to_thread(
+            _client.head_object,
+            Bucket=settings.aws_s3_bucket,
+            Key=filename,
+        )
+        return True
+    except ClientError as error:
+        if error.response["Error"]["Code"] == "404":
+            return False
+        raise
 
 
 async def upload_file(

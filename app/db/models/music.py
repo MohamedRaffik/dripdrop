@@ -75,6 +75,10 @@ class MusicJob(Base):
         self.original_filename = filename
         self.filename_url = url
 
+    def _set_audio_file_from_key(self, key: str):
+        self.original_filename = key
+        self.filename_url = s3.resolve_url(filename=key)
+
     async def _upload_artwork_url(self, artwork_url: str):
         base64_data = None
         base64_extension = "None"
@@ -136,12 +140,15 @@ class MusicJob(Base):
         cls,
         music_job_id: str,
         music_file: MusicFile | None = None,
+        upload_key: str | None = None,
         artwork_url: str | None = None,
     ):
         async with get_session() as db_session:
             query = select(MusicJob).where(MusicJob.id == music_job_id)
             if music_job := await db_session.scalar(query):
-                if music_file:
+                if upload_key:
+                    music_job._set_audio_file_from_key(key=upload_key)
+                elif music_file:
                     await music_job._upload_audio_file(music_file=music_file)
                 if artwork_url:
                     await music_job._upload_artwork_url(artwork_url=artwork_url)
