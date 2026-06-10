@@ -4,12 +4,10 @@ from app.services import s3
 
 from .conftest import PRESIGN_URL
 
-URL = PRESIGN_URL
-
 
 async def test_presign_upload_when_not_logged_in(client):
     response = await client.post(
-        URL,
+        PRESIGN_URL,
         json={"filename": "dripdrop.mp3", "content_type": "audio/mpeg"},
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -18,7 +16,7 @@ async def test_presign_upload_when_not_logged_in(client):
 async def test_presign_upload_with_invalid_content_type(client, create_and_login_user):
     await create_and_login_user()
     response = await client.post(
-        URL,
+        PRESIGN_URL,
         json={"filename": "dripdrop.mp3", "content_type": "image/png"},
     )
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
