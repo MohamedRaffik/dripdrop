@@ -1,7 +1,10 @@
-import httpx
 from fastapi import status
 
-URL = "/api/music/uploads/presign"
+from app.services import s3
+
+from .conftest import PRESIGN_URL
+
+URL = PRESIGN_URL
 
 
 async def test_presign_upload_when_not_logged_in(client):
@@ -35,10 +38,9 @@ async def test_presign_upload(client, create_and_login_user, test_audio):
     assert data["key"].endswith("/old/dripdrop.mp3")
     assert data["publicUrl"]
 
-    async with httpx.AsyncClient() as http_client:
-        upload_response = await http_client.put(
-            data["uploadUrl"],
-            content=test_audio,
-            headers={"Content-Type": "audio/mpeg"},
-        )
-    assert upload_response.is_success
+    await s3.upload_file(
+        filename=data["key"],
+        body=test_audio,
+        content_type="audio/mpeg",
+    )
+    assert await s3.object_exists(filename=data["key"])

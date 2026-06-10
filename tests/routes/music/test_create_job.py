@@ -1,32 +1,14 @@
 from unittest.mock import MagicMock
 
-import httpx
 import pytest
 from fastapi import status
 from sqlalchemy import select
 
 from app.db import MusicJob
 
+from .conftest import PRESIGN_URL, presign_and_upload
+
 URL = "/api/music/jobs/create"
-PRESIGN_URL = "/api/music/uploads/presign"
-
-
-async def presign_and_upload(client, test_audio):
-    presign_response = await client.post(
-        PRESIGN_URL,
-        json={"filename": "dripdrop.mp3", "content_type": "audio/mpeg"},
-    )
-    assert presign_response.status_code == status.HTTP_200_OK
-    presign_data = presign_response.json()
-
-    async with httpx.AsyncClient() as http_client:
-        upload_response = await http_client.put(
-            presign_data["uploadUrl"],
-            content=test_audio,
-            headers={"Content-Type": "audio/mpeg"},
-        )
-    assert upload_response.is_success
-    return presign_data
 
 
 async def test_create_job_when_not_logged_in(client):

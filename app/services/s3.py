@@ -53,7 +53,7 @@ async def object_exists(filename: str):
         )
         return True
     except ClientError as error:
-        if error.response["Error"]["Code"] == "404":
+        if error.response["Error"]["Code"] in {"404", "NoSuchKey", "NotFound"}:
             return False
         raise
 
