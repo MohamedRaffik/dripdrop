@@ -128,6 +128,7 @@ const Account = () => {
                 value={cookies}
                 onChange={(e) => setCookies(e.target.value)}
                 minRows={10}
+                maxRows={15}
                 autosize
                 withAsterisk
                 styles={{ input: { fontFamily: "monospace" } }}

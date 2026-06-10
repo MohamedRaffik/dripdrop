@@ -47,6 +47,7 @@ export const BackgroundPlayerProvider = ({ children }: { children: ReactNode }) 
   const addVideoToQueue = useCallback(({ index, params }: { index: number; params: YoutubeVideosParams }) => {
     setCurrentVideoIndex(index);
     setParams(params);
+    setPlaying(true);
   }, []);
 
   const currentVideo = useMemo(
