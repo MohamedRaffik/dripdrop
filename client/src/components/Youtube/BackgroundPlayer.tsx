@@ -32,12 +32,15 @@ import { useBackgroundPlayer } from "../../providers/BackgroundPlayerProvider";
 import { MdClose } from "react-icons/md";
 import { useYoutubeVideosQuery } from "../../api/youtube";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { getYoutubePlayerApi } from "../../utils/youtubePlayer";
 
 const BackgroundPlayer = () => {
   const {
     addVideoToQueue,
     currentVideo,
+    currentVideoIndex,
     advanceQueue,
+    goToVideoIndex,
     params,
     playing,
     playerRef,
@@ -161,11 +164,14 @@ const BackgroundPlayer = () => {
               <VideoPlayer
                 ref={playerRef}
                 video={currentVideo}
+                playlist={videosStatus.currentData?.videos}
+                playlistIndex={currentVideoIndex}
                 playing={playing}
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
                 onDuration={handleDuration}
                 onProgress={(state) => handleProgress(state.playedSeconds)}
+                onActiveVideoChange={goToVideoIndex}
                 onEnd={() => advanceQueue()}
               />
             </Grid.Col>
@@ -277,11 +283,19 @@ const BackgroundPlayer = () => {
             className="hover-darken"
             variant="transparent"
             onClick={() => {
+              const player = playerRef.current;
+              const api = getYoutubePlayerApi(player);
+              const pageVideos = videosStatus.currentData?.videos;
+
               if (playedSeconds < 5) {
-                recedeQueue();
+                if (api && pageVideos && currentVideoIndex > 0) {
+                  api.previousVideo();
+                } else {
+                  recedeQueue();
+                }
               } else {
-                if (playerRef.current) {
-                  playerRef.current.currentTime = 0;
+                if (player) {
+                  player.currentTime = 0;
                 }
                 setPlayedSeconds(0);
                 setSeekValue(0);
@@ -293,7 +307,20 @@ const BackgroundPlayer = () => {
           <ActionIcon className="hover-darken" variant="transparent" onClick={() => setPlaying(!playing)}>
             {playing ? <FaPause /> : <FaPlay />}
           </ActionIcon>
-          <ActionIcon className="hover-darken" variant="transparent" onClick={advanceQueue}>
+          <ActionIcon
+            className="hover-darken"
+            variant="transparent"
+            onClick={() => {
+              const api = getYoutubePlayerApi(playerRef.current);
+              const pageVideos = videosStatus.currentData?.videos;
+
+              if (api && pageVideos && currentVideoIndex < pageVideos.length - 1) {
+                api.nextVideo();
+              } else {
+                advanceQueue();
+              }
+            }}
+          >
             <CgPlayTrackNext size={25} />
           </ActionIcon>
           <ActionIcon className="hover-darken" variant="transparent" onClick={toggleExpand}>
