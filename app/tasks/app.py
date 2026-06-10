@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 from contextlib import asynccontextmanager
 
 from celery import Celery, Task
@@ -27,6 +28,9 @@ class QueueTask(Task):
             await redis_client.aclose()
 
     def __call__(self, *args, **kwargs):
+        if not inspect.iscoroutinefunction(self.run):
+            return super().__call__(*args, **kwargs)
+
         try:
             loop = asyncio.get_running_loop()
             return loop.create_task(self.run(*args, **kwargs))

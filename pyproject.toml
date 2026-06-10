@@ -21,7 +21,7 @@ dependencies = [
     "pydantic-settings>=2.9.1",
     "pyjwt>=2.10.1",
     "sqlalchemy>=2.0.41",
-    "yt-dlp>=2025.6.9",
+    "yt-dlp[default]>=2025.6.9",
 ]
 
 [dependency-groups]
