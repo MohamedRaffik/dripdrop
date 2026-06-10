@@ -40,7 +40,6 @@ class PresignUploadRequest(BaseModel):
 
 
 class PresignUploadResponse(Response):
-    job_id: str
     upload_url: str
     key: str
     public_url: str
@@ -49,7 +48,6 @@ class PresignUploadResponse(Response):
 class CreateMusicJob(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    job_id: Optional[str] = None
     upload_key: Optional[str] = None
     video_url: Optional[HttpUrl] = None
     artwork_url: Optional[str] = None

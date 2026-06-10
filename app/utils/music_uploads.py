@@ -6,17 +6,26 @@ from app.services import s3
 from app.settings import settings
 
 
-def parse_music_upload_job_id(upload_key: str) -> str | None:
-    match = re.match(
-        rf"^{re.escape(settings.aws_s3_music_folder)}/([^/]+)/old/.+",
-        upload_key,
+def music_temp_folder() -> str:
+    return f"{settings.aws_s3_music_folder}/temp"
+
+
+def build_temp_upload_key(upload_id: str, filename: str) -> str:
+    return f"{music_temp_folder()}/{upload_id}/{filename}"
+
+
+def build_job_audio_key(job_id: str, filename: str) -> str:
+    return f"{settings.aws_s3_music_folder}/{job_id}/old/{filename}"
+
+
+def is_temp_upload_key(upload_key: str) -> bool:
+    return bool(
+        re.match(rf"^{re.escape(music_temp_folder())}/[^/]+/.+", upload_key)
     )
-    return match.group(1) if match else None
 
 
-async def validate_music_upload_key(upload_key: str) -> str:
-    job_id = parse_music_upload_job_id(upload_key)
-    if not job_id:
+async def validate_temp_upload_key(upload_key: str):
+    if not is_temp_upload_key(upload_key):
         raise HTTPException(
             detail="Invalid upload_key.",
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -26,4 +35,3 @@ async def validate_music_upload_key(upload_key: str) -> str:
             detail="Uploaded file not found.",
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
-    return job_id

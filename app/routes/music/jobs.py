@@ -26,7 +26,7 @@ from app.models.music import (
 from app.services.pubsub import PubSub
 from app.tasks.music import run_music_job
 from app.utils.database import query_with_pagination
-from app.utils.music_uploads import validate_music_upload_key
+from app.utils.music_uploads import validate_temp_upload_key
 
 router = APIRouter(
     prefix="/jobs",
@@ -53,28 +53,15 @@ async def create_job(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
     if form.upload_key:
-        if not form.job_id:
-            raise HTTPException(
-                detail="'job_id' is required when 'upload_key' is defined.",
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            )
-        job_id = await validate_music_upload_key(upload_key=form.upload_key)
-        if job_id != form.job_id:
-            raise HTTPException(
-                detail="Invalid upload_key.",
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            )
-    job_kwargs = {
-        "user_email": user.email,
-        "video_url": form.video_url.unicode_string() if form.video_url else None,
-        "title": form.title,
-        "artist": form.artist,
-        "album": form.album,
-        "grouping": form.grouping,
-    }
-    if form.job_id:
-        job_kwargs["id"] = form.job_id
-    music_job = MusicJob(**job_kwargs)
+        await validate_temp_upload_key(upload_key=form.upload_key)
+    music_job = MusicJob(
+        user_email=user.email,
+        video_url=form.video_url.unicode_string() if form.video_url else None,
+        title=form.title,
+        artist=form.artist,
+        album=form.album,
+        grouping=form.grouping,
+    )
     session.add(music_job)
     await session.commit()
     await MusicJob.upload_files(

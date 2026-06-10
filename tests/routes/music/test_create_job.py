@@ -5,6 +5,8 @@ from fastapi import status
 from sqlalchemy import select
 
 from app.db import MusicJob
+from app.services import s3
+from app.utils.music_uploads import build_job_audio_key, music_temp_folder
 
 from .conftest import PRESIGN_URL, presign_and_upload
 
@@ -39,7 +41,6 @@ async def test_create_job_with_upload_key_and_video_url(
             "album": "album",
             "grouping": "grouping",
             "video_url": test_video_url,
-            "job_id": presign_data["jobId"],
             "upload_key": presign_data["key"],
         },
     )
@@ -83,12 +84,27 @@ async def test_create_job_with_missing_uploaded_file(client, create_and_login_us
             "artist": "artist",
             "album": "album",
             "grouping": "grouping",
-            "job_id": presign_data["jobId"],
             "upload_key": presign_data["key"],
         },
     )
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     assert response.json() == {"detail": "Uploaded file not found."}
+
+
+async def test_create_job_with_invalid_upload_key(client, create_and_login_user):
+    await create_and_login_user()
+    response = await client.post(
+        URL,
+        data={
+            "title": "title",
+            "artist": "artist",
+            "album": "album",
+            "grouping": "grouping",
+            "upload_key": "music/not-temp/test.mp3",
+        },
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    assert response.json() == {"detail": "Invalid upload_key."}
 
 
 @pytest.mark.long
@@ -102,6 +118,7 @@ async def test_create_job_with_upload_key(
 
     await create_and_login_user()
     presign_data = await presign_and_upload(client, test_audio)
+    temp_key = presign_data["key"]
     response = await client.post(
         URL,
         data={
@@ -109,8 +126,7 @@ async def test_create_job_with_upload_key(
             "artist": "artist",
             "album": "album",
             "grouping": "grouping",
-            "job_id": presign_data["jobId"],
-            "upload_key": presign_data["key"],
+            "upload_key": temp_key,
         },
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -119,13 +135,15 @@ async def test_create_job_with_upload_key(
     music_jobs = (await db_session.scalars(query)).all()
     assert len(music_jobs) == 1
     music_job = music_jobs[0]
-    assert music_job.id == presign_data["jobId"]
     assert music_job.title == "title"
     assert music_job.artist == "artist"
     assert music_job.album == "album"
     assert music_job.grouping == "grouping"
-    assert music_job.original_filename == presign_data["key"]
-    assert music_job.filename_url == presign_data["publicUrl"]
+    expected_key = build_job_audio_key(job_id=music_job.id, filename="dripdrop.mp3")
+    assert music_job.original_filename == expected_key
+    assert music_job.filename_url == s3.resolve_url(filename=expected_key)
+    assert temp_key.startswith(f"{music_temp_folder()}/")
+    assert not await s3.object_exists(filename=temp_key)
 
 
 async def test_create_job_with_video_url_without_metadata(

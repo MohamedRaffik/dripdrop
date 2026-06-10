@@ -11,6 +11,7 @@ from app.db import Base, get_session
 from app.db.models.user import User
 from app.services import audiotags, httpclient, imagedownloader, s3
 from app.settings import settings
+from app.utils.music_uploads import build_job_audio_key
 
 
 class MusicJob(Base):
@@ -127,7 +128,13 @@ class MusicJob(Base):
             query = select(MusicJob).where(MusicJob.id == music_job_id)
             if music_job := await db_session.scalar(query):
                 if upload_key:
-                    music_job._set_audio_file_from_key(key=upload_key)
+                    filename = upload_key.rsplit("/", 1)[-1]
+                    job_key = build_job_audio_key(
+                        job_id=music_job.id, filename=filename
+                    )
+                    await s3.copy_file(source_key=upload_key, dest_key=job_key)
+                    await s3.delete_file(filename=upload_key)
+                    music_job._set_audio_file_from_key(key=job_key)
                 if artwork_url:
                     await music_job._upload_artwork_url(artwork_url=artwork_url)
                 await db_session.commit()

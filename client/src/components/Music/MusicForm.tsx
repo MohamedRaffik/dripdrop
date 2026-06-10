@@ -64,7 +64,7 @@ const MusicForm = () => {
       if (presignStatus.error) {
         return null;
       }
-      const { jobId, uploadUrl, key } = presignStatus.data;
+      const { uploadUrl, key } = presignStatus.data;
       const uploadResponse = await fetch(uploadUrl, {
         method: "PUT",
         body: file,
@@ -73,7 +73,7 @@ const MusicForm = () => {
       if (!uploadResponse.ok) {
         return null;
       }
-      return { jobId, key };
+      return { key };
     },
     [presignUpload]
   );
@@ -95,11 +95,10 @@ const MusicForm = () => {
 
       const formData = new FormData();
       if (data.file) {
-        if (!data.isFile || !data.jobId || !data.uploadKey) {
+        if (!data.isFile || !data.uploadKey) {
           errorNotification();
           return;
         }
-        formData.append("job_id", data.jobId);
         formData.append("upload_key", data.uploadKey);
       } else {
         formData.append("video_url", data.videoUrl);
@@ -155,13 +154,11 @@ const MusicForm = () => {
 
   const getFileTags = useCallback(
     async (file: File) => {
-      setValue("jobId", "");
       setValue("uploadKey", "");
       const upload = await uploadFile(file);
       if (!upload) {
         return;
       }
-      setValue("jobId", upload.jobId);
       setValue("uploadKey", upload.key);
       const status = await getTags({ upload_key: upload.key });
       if (!status.error) {

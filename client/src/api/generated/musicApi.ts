@@ -102,13 +102,11 @@ export type PresignUploadRequest = {
   content_type: string;
 };
 export type PresignUploadResponse = {
-  jobId: string;
   uploadUrl: string;
   key: string;
   publicUrl: string;
 };
 export type CreateMusicJob = {
-  jobId?: string | null;
   uploadKey?: string | null;
   video_url?: string | null;
   artwork_url?: string | null;

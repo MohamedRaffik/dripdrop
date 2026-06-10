@@ -12,7 +12,9 @@ async def test_tags_when_not_logged_in(client):
     Test retrieving id3 tags from an audio file when not logged in.
     """
 
-    response = await client.post(URL, json={"upload_key": "music/test/old/test.mp3"})
+    response = await client.post(
+        URL, json={"upload_key": "music/temp/00000000-0000-0000-0000-000000000000/test.mp3"}
+    )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -20,7 +22,7 @@ async def test_tags_with_missing_upload(client, create_and_login_user):
     await create_and_login_user()
     response = await client.post(
         URL,
-        json={"upload_key": "music/00000000-0000-0000-0000-000000000000/old/test.mp3"},
+        json={"upload_key": "music/temp/00000000-0000-0000-0000-000000000000/test.mp3"},
     )
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     assert response.json() == {"detail": "Uploaded file not found."}

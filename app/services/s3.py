@@ -69,6 +69,20 @@ async def object_exists(filename: str):
         raise
 
 
+async def copy_file(
+    source_key: str,
+    dest_key: str,
+    acl: str = "public-read",
+):
+    return await asyncio.to_thread(
+        _client.copy_object,
+        Bucket=settings.aws_s3_bucket,
+        CopySource={"Bucket": settings.aws_s3_bucket, "Key": source_key},
+        Key=dest_key,
+        ACL=acl,
+    )
+
+
 async def upload_file(
     filename: str,
     body: bytes,
