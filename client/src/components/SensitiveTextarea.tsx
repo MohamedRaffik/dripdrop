@@ -1,8 +1,20 @@
 import { ActionIcon, Textarea, type ActionIconProps, type TextareaProps } from "@mantine/core";
 import { useUncontrolled } from "@mantine/hooks";
+import type { CSSProperties } from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 
-export type SensitiveTextareaProps = TextareaProps & {
+type SensitiveTextareaStyles = {
+  input?: CSSProperties;
+  root?: CSSProperties;
+  wrapper?: CSSProperties;
+  section?: CSSProperties;
+  label?: CSSProperties;
+  description?: CSSProperties;
+  error?: CSSProperties;
+};
+
+export type SensitiveTextareaProps = Omit<TextareaProps, "styles"> & {
+  styles?: SensitiveTextareaStyles;
   visible?: boolean;
   defaultVisible?: boolean;
   onVisibilityChange?: (visible: boolean) => void;
@@ -29,7 +41,6 @@ const SensitiveTextarea = ({
   });
 
   const toggleVisibility = () => setRevealed(!revealed);
-  const maskStyles = !revealed ? ({ WebkitTextSecurity: "disc" } as const) : {};
 
   const visibilityToggleButton = (
     <ActionIcon
@@ -69,20 +80,13 @@ const SensitiveTextarea = ({
       radius={radius}
       rightSection={rightSection ?? visibilityToggleButton}
       rightSectionPointerEvents={rightSectionPointerEvents || "all"}
-      styles={
-        typeof styles === "function"
-          ? (theme, props, ctx) => {
-              const resolved = styles(theme, props, ctx);
-              return {
-                ...resolved,
-                input: { ...resolved?.input, ...maskStyles },
-              };
-            }
-          : {
-              ...styles,
-              input: { ...styles?.input, ...maskStyles },
-            }
-      }
+      styles={{
+        ...styles,
+        input: {
+          ...styles?.input,
+          ...(!revealed && { WebkitTextSecurity: "disc" }),
+        },
+      }}
     />
   );
 };
