@@ -1,7 +1,20 @@
-import { Button, Checkbox, Container, Group, Modal, PasswordInput, Stack, Tabs, Textarea, TextInput } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Checkbox,
+  Container,
+  Group,
+  Modal,
+  PasswordInput,
+  Stack,
+  Tabs,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { Link } from "react-router-dom";
 
 import { useCheckSessionQuery, useLogoutMutation } from "../../api/auth";
@@ -27,6 +40,7 @@ const Account = () => {
 
   const [webdavInfo, setWebdavInfo] = useState({ username: "", password: "", url: "" });
   const [cookies, setCookies] = useState("");
+  const [cookiesVisible, cookiesVisibleHandlers] = useDisclosure(false);
   const [webdavDeleteOpened, webdavDeleteHandlers] = useDisclosure(false);
   const [cookiesDeleteOpened, cookiesDeleteHandlers] = useDisclosure(false);
 
@@ -131,7 +145,27 @@ const Account = () => {
                 maxRows={15}
                 autosize
                 withAsterisk
-                styles={{ input: { fontFamily: "monospace" } }}
+                rightSection={
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    aria-label={cookiesVisible ? "Hide cookies" : "Show cookies"}
+                    aria-pressed={cookiesVisible}
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      cookiesVisibleHandlers.toggle();
+                    }}
+                  >
+                    {cookiesVisible ? <MdVisibilityOff size={16} /> : <MdVisibility size={16} />}
+                  </ActionIcon>
+                }
+                rightSectionPointerEvents="all"
+                styles={{
+                  input: {
+                    fontFamily: "monospace",
+                    ...(!cookiesVisible && { WebkitTextSecurity: "disc" }),
+                  },
+                }}
               />
               {updateCookiesStatus.isError && (
                 <p style={{ color: "red" }}>{String(updateCookiesStatus.error)}</p>
