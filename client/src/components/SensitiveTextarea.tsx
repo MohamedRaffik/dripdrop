@@ -2,11 +2,11 @@ import { ActionIcon, Textarea, type ActionIconProps, type TextareaProps } from "
 import { useUncontrolled } from "@mantine/hooks";
 import type { ComponentType } from "react";
 
-interface PasswordToggleIconProps {
+interface VisibilityToggleIconProps {
   reveal: boolean;
 }
 
-const PasswordToggleIcon = ({ reveal }: PasswordToggleIconProps) => (
+const VisibilityToggleIcon = ({ reveal }: VisibilityToggleIconProps) => (
   <svg
     viewBox="0 0 15 15"
     fill="none"
@@ -26,27 +26,27 @@ const PasswordToggleIcon = ({ reveal }: PasswordToggleIconProps) => (
   </svg>
 );
 
-export type PasswordTextareaProps = TextareaProps & {
+export type SensitiveTextareaProps = TextareaProps & {
   visible?: boolean;
   defaultVisible?: boolean;
   onVisibilityChange?: (visible: boolean) => void;
   visibilityToggleButtonProps?: ActionIconProps & React.ComponentPropsWithoutRef<"button">;
-  visibilityToggleIcon?: ComponentType<PasswordToggleIconProps>;
+  visibilityToggleIcon?: ComponentType<VisibilityToggleIconProps>;
 };
 
-const PasswordTextarea = ({
+const SensitiveTextarea = ({
   visible,
   defaultVisible,
   onVisibilityChange,
   visibilityToggleButtonProps,
-  visibilityToggleIcon: VisibilityToggleIcon = PasswordToggleIcon,
+  visibilityToggleIcon: ToggleIcon = VisibilityToggleIcon,
   rightSection,
   rightSectionPointerEvents,
   disabled,
   radius,
   styles,
   ...textareaProps
-}: PasswordTextareaProps) => {
+}: SensitiveTextareaProps) => {
   const [revealed, setRevealed] = useUncontrolled({
     value: visible,
     defaultValue: defaultVisible,
@@ -84,7 +84,7 @@ const PasswordTextarea = ({
         }
       }}
     >
-      <VisibilityToggleIcon reveal={revealed} />
+      <ToggleIcon reveal={revealed} />
     </ActionIcon>
   );
 
@@ -113,4 +113,4 @@ const PasswordTextarea = ({
   );
 };
 
-export default PasswordTextarea;
+export default SensitiveTextarea;

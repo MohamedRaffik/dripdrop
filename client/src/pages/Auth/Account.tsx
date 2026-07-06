@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 
-import PasswordTextarea from "../../components/Auth/PasswordTextarea";
+import SensitiveTextarea from "../../components/SensitiveTextarea";
 import { useCheckSessionQuery, useLogoutMutation } from "../../api/auth";
 import { useCookiesQuery, useUpdateCookiesMutation, useDeleteCookiesMutation } from "../../api/cookies";
 import { useWebdavQuery, useUpdateWebdavMutation, useDeleteWebdavMutation } from "../../api/webdav";
@@ -123,7 +123,7 @@ const Account = () => {
           </Tabs.Panel>
           <Tabs.Panel value={AccountTabs.COOKIES}>
             <Stack p="md">
-              <PasswordTextarea
+              <SensitiveTextarea
                 label="Cookies"
                 description="Paste the contents of a Netscape-format cookies.txt file. These are used when downloading audio with yt-dlp."
                 value={cookies}
