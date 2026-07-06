@@ -1,6 +1,6 @@
 import { ActionIcon, Textarea, type ActionIconProps, type TextareaProps } from "@mantine/core";
 import { useUncontrolled } from "@mantine/hooks";
-import { IconEye, IconEyeOff } from "@tabler/icons-react";
+import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 
 export type SensitiveTextareaProps = TextareaProps & {
   visible?: boolean;
@@ -58,7 +58,7 @@ const SensitiveTextarea = ({
         }
       }}
     >
-      {revealed ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+      {revealed ? <MdVisibilityOff size={16} /> : <MdVisibility size={16} />}
     </ActionIcon>
   );
 
