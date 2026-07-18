@@ -73,6 +73,9 @@ export const BackgroundPlayerProvider = ({ children }: { children: ReactNode }) 
         setParams({ ...params, page: params.page + 1 });
         setCurrentVideoIndex(0);
       }
+      // Restore playback after advancing. react-player fires onPause before onEnded
+      // when a video finishes, which clears playing before we load the next track.
+      setPlaying(true);
     }
   }, [canAdvanceQueue, currentVideoIndex, params, videosStatus.currentData]);
 
