@@ -5,6 +5,10 @@ from fastapi import status
 from sqlalchemy import select
 
 from app.db import MusicJob
+from app.services import s3
+from app.utils.music_uploads import build_job_audio_key, music_temp_folder
+
+from .conftest import PRESIGN_URL, presign_and_upload
 
 URL = "/api/music/jobs/create"
 
@@ -19,15 +23,16 @@ async def test_create_job_when_not_logged_in(client):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-async def test_create_job_with_file_and_video_url(
+async def test_create_job_with_upload_key_and_video_url(
     client, create_and_login_user, test_video_url, test_audio
 ):
     """
-    Test creating a music job when logged in with a file and video_url. The
-    endpoint should return a 422 status.
+    Test creating a music job when logged in with an upload_key and video_url.
+    The endpoint should return a 422 status.
     """
 
     await create_and_login_user()
+    presign_data = await presign_and_upload(client, test_audio)
     response = await client.post(
         URL,
         data={
@@ -36,40 +41,18 @@ async def test_create_job_with_file_and_video_url(
             "album": "album",
             "grouping": "grouping",
             "video_url": test_video_url,
-        },
-        files={
-            "file": ("dripdrop.mp3", test_audio, "audio/mpeg"),
+            "upload_key": presign_data["key"],
         },
     )
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     assert response.json() == {
-        "detail": "'file' and 'video_url' cannot both be defined."
+        "detail": "'upload_key' and 'video_url' cannot both be defined."
     }
 
 
-async def test_create_job_without_file_and_video_url(client, create_and_login_user):
+async def test_create_job_without_upload_key_and_video_url(client, create_and_login_user):
     """
-    Test creating a music job when logged in with a file and video_url. The
-    endpoint should return a 422 status.
-    """
-
-    await create_and_login_user()
-    response = await client.post(
-        URL,
-        data={
-            "title": "title",
-            "artist": "artist",
-            "album": "album",
-            "grouping": "grouping",
-        },
-    )
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
-    assert response.json() == {"detail": "'file' or 'video_url' must be defined."}
-
-
-async def test_create_job_with_invalid_content_type_file(client, create_and_login_user):
-    """
-    Test creating a music job when logged in but with invalid content type.
+    Test creating a music job when logged in without an upload_key or video_url.
     The endpoint should return a 422 status.
     """
 
@@ -82,21 +65,33 @@ async def test_create_job_with_invalid_content_type_file(client, create_and_logi
             "album": "album",
             "grouping": "grouping",
         },
-        files={"file": b""},
     )
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
-    assert response.json() == {"detail": "File is incorrect format."}
+    assert response.json() == {"detail": "'upload_key' or 'video_url' must be defined."}
 
 
-@pytest.mark.long
-async def test_create_job_with_file(
-    client, create_and_login_user, test_audio, db_session
-):
-    """
-    Test creating a job with an image file but with an audio content type. The endpoint
-    should return a 201 status.
-    """
+async def test_create_job_with_missing_uploaded_file(client, create_and_login_user):
+    await create_and_login_user()
+    presign_response = await client.post(
+        PRESIGN_URL,
+        json={"filename": "dripdrop.mp3", "content_type": "audio/mpeg"},
+    )
+    presign_data = presign_response.json()
+    response = await client.post(
+        URL,
+        data={
+            "title": "title",
+            "artist": "artist",
+            "album": "album",
+            "grouping": "grouping",
+            "upload_key": presign_data["key"],
+        },
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    assert response.json() == {"detail": "Uploaded file not found."}
 
+
+async def test_create_job_with_invalid_upload_key(client, create_and_login_user):
     await create_and_login_user()
     response = await client.post(
         URL,
@@ -105,9 +100,33 @@ async def test_create_job_with_file(
             "artist": "artist",
             "album": "album",
             "grouping": "grouping",
+            "upload_key": "music/not-temp/test.mp3",
         },
-        files={
-            "file": ("dripdrop.mp3", test_audio, "audio/mpeg"),
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    assert response.json() == {"detail": "Invalid upload_key."}
+
+
+@pytest.mark.long
+async def test_create_job_with_upload_key(
+    client, create_and_login_user, test_audio, db_session
+):
+    """
+    Test creating a job with a presigned upload. The endpoint should return a
+    201 status.
+    """
+
+    await create_and_login_user()
+    presign_data = await presign_and_upload(client, test_audio)
+    temp_key = presign_data["key"]
+    response = await client.post(
+        URL,
+        data={
+            "title": "title",
+            "artist": "artist",
+            "album": "album",
+            "grouping": "grouping",
+            "upload_key": temp_key,
         },
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -120,6 +139,11 @@ async def test_create_job_with_file(
     assert music_job.artist == "artist"
     assert music_job.album == "album"
     assert music_job.grouping == "grouping"
+    expected_key = build_job_audio_key(job_id=music_job.id, filename="dripdrop.mp3")
+    assert music_job.original_filename == expected_key
+    assert music_job.filename_url == s3.resolve_url(filename=expected_key)
+    assert temp_key.startswith(f"{music_temp_folder()}/")
+    assert not await s3.object_exists(filename=temp_key)
 
 
 async def test_create_job_with_video_url_without_metadata(

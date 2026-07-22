@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import yt_dlp.utils
-from fastapi import UploadFile
 from sqlalchemy.exc import NoResultFound
 
 from app.db import MusicJob, User, WebDav
@@ -185,12 +184,8 @@ async def test_run_music_job_with_file(
     should finish successfully and with the correct tag values.
     """
 
-    test_file = UploadFile(
-        filename="test.mp3", file=test_audio, headers={"content-type": "audio/mpeg"}
-    )
-
     user: User = await create_user()
-    music_job: MusicJob = await create_music_job(email=user.email, file=test_file)
+    music_job: MusicJob = await create_music_job(email=user.email, audio=test_audio)
 
     expected_title = music_job.title
     expected_artist = music_job.artist

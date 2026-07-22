@@ -55,9 +55,13 @@ celery.conf.update(
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender: Celery, **kwargs):
-    from app.tasks import youtube
+    from app.tasks import music, youtube
 
     if settings.env == ENV.PRODUCTION:
+        sender.add_periodic_task(
+            crontab.from_string("0 4 * * *"),
+            music.cleanup_temp_music_uploads.s(),
+        )
         sender.add_periodic_task(
             crontab.from_string("0 * * * *"),
             youtube.update_channel_videos.s(),
