@@ -33,7 +33,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
       - name: Infisical
-        uses: infisical/secrets-action@v1.0.16
+        uses: infisical/secrets-action@v1.0.17
         with:
           method: oidc
           identity-id: e856a171-c913-4243-936d-942d86b7d4ea
