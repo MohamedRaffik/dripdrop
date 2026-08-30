@@ -1,18 +1,25 @@
 import logging
+import re
 import traceback
+import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import HttpUrl
 
 from app.dependencies import get_authenticated_user
 from app.models.music import (
     MetadataResponse,
+    PresignUploadRequest,
+    PresignUploadResponse,
     ResolvedArtworkResponse,
+    TagsRequest,
     TagsResponse,
 )
+from app.services import s3
 from app.routes.music.jobs import router as jobs_router
 from app.services import audiotags, google, imagedownloader, ytdlp
+from app.utils.music_uploads import build_temp_upload_key, validate_temp_upload_key
 from app.utils.youtube import parse_youtube_video_id
 
 logger = logging.getLogger(__name__)
@@ -68,11 +75,32 @@ async def get_artwork(artwork_url: Annotated[HttpUrl, Query()]):
         )
 
 
-@router.post("/tags", response_model=TagsResponse)
-async def get_tags(file: UploadFile):
-    tags = await audiotags.AudioTags.read_tags(
-        file=await file.read(), filename=file.filename
+@router.post("/uploads/presign", response_model=PresignUploadResponse)
+async def presign_upload(request: PresignUploadRequest):
+    if not re.match("^audio/", request.content_type):
+        raise HTTPException(
+            detail="File is incorrect format.",
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
+    upload_id = str(uuid.uuid4())
+    key = build_temp_upload_key(upload_id=upload_id, filename=request.filename)
+    upload_url = await s3.generate_presigned_upload_url(
+        filename=key,
+        content_type=request.content_type,
     )
+    return PresignUploadResponse(
+        upload_url=upload_url,
+        key=key,
+        public_url=s3.resolve_url(filename=key),
+    )
+
+
+@router.post("/tags", response_model=TagsResponse)
+async def get_tags(request: TagsRequest):
+    await validate_temp_upload_key(upload_key=request.upload_key)
+    file_bytes = await s3.download_file(filename=request.upload_key)
+    filename = request.upload_key.rsplit("/", 1)[-1]
+    tags = await audiotags.AudioTags.read_tags(file=file_bytes, filename=filename)
     return TagsResponse(
         title=tags.title,
         artist=tags.artist,

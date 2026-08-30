@@ -2,6 +2,8 @@ from fastapi import status
 
 from app.services import audiotags, httpclient, s3
 
+from .conftest import presign_and_upload
+
 URL = "/api/music/tags"
 
 
@@ -10,8 +12,20 @@ async def test_tags_when_not_logged_in(client):
     Test retrieving id3 tags from an audio file when not logged in.
     """
 
-    response = await client.post(URL, files={"file": b"test"})
+    response = await client.post(
+        URL, json={"upload_key": "music/temp/00000000-0000-0000-0000-000000000000/test.mp3"}
+    )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+async def test_tags_with_missing_upload(client, create_and_login_user):
+    await create_and_login_user()
+    response = await client.post(
+        URL,
+        json={"upload_key": "music/temp/00000000-0000-0000-0000-000000000000/test.mp3"},
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    assert response.json() == {"detail": "Uploaded file not found."}
 
 
 async def test_tags_with_an_invalid_file(client, create_and_login_user):
@@ -25,7 +39,8 @@ async def test_tags_with_an_invalid_file(client, create_and_login_user):
         response = await http_client.get(s3.resolve_url("assets/dripdrop.png"))
         assert response.status_code == status.HTTP_200_OK
         file = response.content
-    response = await client.post(URL, files={"file": file})
+    presign_data = await presign_and_upload(client, file)
+    response = await client.post(URL, json={"upload_key": presign_data["key"]})
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "title": None,
@@ -47,7 +62,8 @@ async def test_tags_with_a_mp3_without_tags(client, create_and_login_user):
         response = await http_client.get(s3.resolve_url("assets/sample4.mp3"))
         assert response.status_code == status.HTTP_200_OK
         file = response.content
-    response = await client.post(URL, files={"file": file})
+    presign_data = await presign_and_upload(client, file)
+    response = await client.post(URL, json={"upload_key": presign_data["key"]})
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "title": None,
@@ -71,8 +87,9 @@ async def test_tags_with_a_valid_mp3_file(client, create_and_login_user):
         )
         assert response.status_code == status.HTTP_200_OK
         file = response.content
+    presign_data = await presign_and_upload(client, file)
     expected_tags = await audiotags.AudioTags.read_tags(file=file, filename="test.mp3")
-    response = await client.post(URL, files={"file": file})
+    response = await client.post(URL, json={"upload_key": presign_data["key"]})
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "title": "Criminal",

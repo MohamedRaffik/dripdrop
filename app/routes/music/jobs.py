@@ -1,4 +1,3 @@
-import re
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -16,7 +15,7 @@ from fastapi import (
 )
 from sqlalchemy import select
 
-from app.db import MusicFile, MusicJob
+from app.db import MusicJob
 from app.dependencies import AuthUser, DatabaseSession, get_authenticated_user
 from app.models import Pagination
 from app.models.music import (
@@ -27,6 +26,7 @@ from app.models.music import (
 from app.services.pubsub import PubSub
 from app.tasks.music import run_music_job
 from app.utils.database import query_with_pagination
+from app.utils.music_uploads import validate_temp_upload_key
 
 router = APIRouter(
     prefix="/jobs",
@@ -42,22 +42,18 @@ async def create_job(
     background_tasks: BackgroundTasks,
     form: Annotated[CreateMusicJob, Form()],
 ):
-    if form.file and form.video_url:
+    if form.upload_key and form.video_url:
         raise HTTPException(
-            detail="'file' and 'video_url' cannot both be defined.",
+            detail="'upload_key' and 'video_url' cannot both be defined.",
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
-    elif form.file is None and form.video_url is None:
+    elif form.upload_key is None and form.video_url is None:
         raise HTTPException(
-            detail="'file' or 'video_url' must be defined.",
+            detail="'upload_key' or 'video_url' must be defined.",
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
-    if form.file:
-        if not re.match("^audio/", form.file.content_type):
-            raise HTTPException(
-                detail="File is incorrect format.",
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            )
+    if form.upload_key:
+        await validate_temp_upload_key(upload_key=form.upload_key)
     music_job = MusicJob(
         user_email=user.email,
         video_url=form.video_url.unicode_string() if form.video_url else None,
@@ -68,18 +64,9 @@ async def create_job(
     )
     session.add(music_job)
     await session.commit()
-    music_file = (
-        MusicFile(
-            file=await form.file.read(),
-            filename=form.file.filename,
-            content_type=form.file.content_type,
-        )
-        if form.file
-        else None
-    )
     await MusicJob.upload_files(
         music_job_id=music_job.id,
-        music_file=music_file,
+        upload_key=form.upload_key,
         artwork_url=form.artwork_url,
     )
     background_tasks.add_task(

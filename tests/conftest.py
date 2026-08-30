@@ -185,7 +185,8 @@ async def test_image(test_image_url):
 async def create_music_job(db_session: AsyncSession, faker: Faker):
     async def _run(
         email: str,
-        file: bytes = None,
+        audio: bytes = None,
+        audio_filename: str = "test.mp3",
         video_url: str = None,
         artwork_url: str = None,
         title: str = None,
@@ -205,9 +206,19 @@ async def create_music_job(db_session: AsyncSession, faker: Faker):
         )
         db_session.add(music_job)
         await db_session.commit()
+        upload_key = None
+        if audio is not None:
+            upload_key = (
+                f"{settings.aws_s3_music_folder}/{music_job.id}/old/{audio_filename}"
+            )
+            await s3.upload_file(
+                filename=upload_key,
+                body=audio,
+                content_type="audio/mpeg",
+            )
         await MusicJob.upload_files(
             music_job_id=music_job.id,
-            music_file=file,
+            upload_key=upload_key,
             artwork_url=artwork_url,
         )
         await db_session.refresh(music_job)

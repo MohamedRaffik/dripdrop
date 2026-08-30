@@ -72,6 +72,7 @@ export const {
   useLazyGetArtworkApiMusicArtworkGetQuery: useLazyArtworkQuery,
   useLazyGetMetadataApiMusicMetadataGetQuery: useLazyMetadataQuery,
   useGetTagsApiMusicTagsPostMutation: useTagsMutation,
+  usePresignUploadApiMusicUploadsPresignPostMutation: usePresignUploadMutation,
   useCreateJobApiMusicJobsCreatePostMutation: useCreateJobMutation,
   useGetJobsApiMusicJobsListGetQuery: useMusicJobsQuery,
   useListenMusicJobsQuery,

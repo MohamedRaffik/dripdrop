@@ -1,5 +1,5 @@
 import pytest
-from fastapi import BackgroundTasks, HTTPException, UploadFile, status
+from fastapi import BackgroundTasks, HTTPException, status
 
 from app.db import MusicJob, User
 from app.routes.music.jobs import delete_job
@@ -98,14 +98,10 @@ async def test_delete_job_with_files(
     should be deleted.
     """
 
-    test_file = UploadFile(
-        filename="test.mp3", file=test_audio, headers={"content-type": "audio/mpeg"}
-    )
-
     user: User = await create_and_login_user()
     music_job: MusicJob = await create_music_job(
         email=user.email,
-        file=test_file,
+        audio=test_audio,
         artwork_url=audiotags.AudioTags.get_image_as_base64(test_image),
     )
 

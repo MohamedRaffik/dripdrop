@@ -20,6 +20,7 @@ from app.services import (
 from app.services.pubsub import PubSub
 from app.settings import settings
 from app.tasks.app import QueueTask, celery
+from app.utils.music_uploads import cleanup_temp_uploads
 
 async def retrieve_audio_file(music_job: MusicJob, cookies: str | None = None):
     job_file_path = Path(
@@ -176,3 +177,8 @@ async def run_music_job(
                 id=music_job_id, status="COMPLETED"
             ).model_dump_json()
         )
+
+
+@celery.task
+async def cleanup_temp_music_uploads():
+    return len(await cleanup_temp_uploads())

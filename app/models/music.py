@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Literal, Optional
 
-from fastapi import UploadFile
 from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 
 from app.models import Response
@@ -23,6 +22,10 @@ class MusicJobUpdateResponse(Response):
     status: Literal["STARTED", "COMPLETED"]
 
 
+class TagsRequest(BaseModel):
+    upload_key: str
+
+
 class TagsResponse(Response):
     title: Optional[str] = None
     artist: Optional[str] = None
@@ -31,10 +34,21 @@ class TagsResponse(Response):
     artwork_url: Optional[str] = None
 
 
+class PresignUploadRequest(BaseModel):
+    filename: str
+    content_type: str
+
+
+class PresignUploadResponse(Response):
+    upload_url: str
+    key: str
+    public_url: str
+
+
 class CreateMusicJob(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    file: Optional[UploadFile] = None
+    upload_key: Optional[str] = None
     video_url: Optional[HttpUrl] = None
     artwork_url: Optional[str] = None
     title: str

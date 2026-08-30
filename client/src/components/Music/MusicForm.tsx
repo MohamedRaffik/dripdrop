@@ -17,7 +17,13 @@ import { showNotification } from "@mantine/notifications";
 import { useCallback, useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
-import { useLazyArtworkQuery, useCreateJobMutation, useLazyMetadataQuery, useTagsMutation } from "../../api/music";
+import {
+  useLazyArtworkQuery,
+  useCreateJobMutation,
+  useLazyMetadataQuery,
+  usePresignUploadMutation,
+  useTagsMutation,
+} from "../../api/music";
 import { useWebdavQuery } from "../../api/webdav";
 import { isBase64, isValidImage, resolveAlbumFromTitle } from "../../utils/helpers";
 import { CreateMusicJob } from "../../api/generated/musicApi";
@@ -32,6 +38,7 @@ const MusicForm = () => {
   const [debouncedVideoUrl] = useDebouncedValue(watchFields.videoUrl, 500);
 
   const [createMusicJob, createJobStatus] = useCreateJobMutation();
+  const [presignUpload] = usePresignUploadMutation();
   const webdavStatus = useWebdavQuery();
   const [getArtwork, getArtworkStatus] = useLazyArtworkQuery();
   const [getTags, getTagsStatus] = useTagsMutation();
@@ -46,6 +53,29 @@ const MusicForm = () => {
   const metadataLoading = useMemo(
     () => getMetadataStatus.isLoading || getMetadataStatus.isFetching,
     [getMetadataStatus.isFetching, getMetadataStatus.isLoading]
+  );
+
+  const uploadFile = useCallback(
+    async (file: File) => {
+      const presignStatus = await presignUpload({
+        filename: file.name,
+        content_type: file.type,
+      });
+      if (presignStatus.error) {
+        return null;
+      }
+      const { uploadUrl, key } = presignStatus.data;
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+      if (!uploadResponse.ok) {
+        return null;
+      }
+      return { key };
+    },
+    [presignUpload]
   );
 
   const onSubmit = useCallback(
@@ -65,7 +95,11 @@ const MusicForm = () => {
 
       const formData = new FormData();
       if (data.file) {
-        formData.append("file", data.file);
+        if (!data.isFile || !data.uploadKey) {
+          errorNotification();
+          return;
+        }
+        formData.append("upload_key", data.uploadKey);
       } else {
         formData.append("video_url", data.videoUrl);
       }
@@ -120,7 +154,13 @@ const MusicForm = () => {
 
   const getFileTags = useCallback(
     async (file: File) => {
-      const status = await getTags({ file });
+      setValue("uploadKey", "");
+      const upload = await uploadFile(file);
+      if (!upload) {
+        return;
+      }
+      setValue("uploadKey", upload.key);
+      const status = await getTags({ upload_key: upload.key });
       if (!status.error) {
         const { title, artist, album, grouping, artworkUrl } = status.data;
         if (title) {
@@ -141,7 +181,7 @@ const MusicForm = () => {
         trigger();
       }
     },
-    [getTags, setValue, trigger]
+    [getTags, setValue, trigger, uploadFile]
   );
 
   useEffect(() => {
