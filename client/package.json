@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "serve": "http-server ./dist -p 80 --proxy http://localhost?",
+    "build": "tsc && vite build && cp dist/index.html dist/404.html",
+    "serve": "http-server ./dist -p 80",
     "preview": "vite preview",
     "generate": "npx @rtk-query/codegen-openapi openapi-config.js"
   },
